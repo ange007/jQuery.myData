@@ -1,0 +1,47 @@
+{
+  "name": "jquery-mydata",
+  "version": "0.1.0",
+  "description": "Small JQuery&Zepto plugin for two-ways data binding.",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Borisenko Vladimir",
+      "email": "ange007@users.noreply.github.com",
+      "url": "https://github.com/ange007/JQuery.myData/"
+    }
+  ],
+  "keywords": [
+    "jquery-plugin",
+    "zepto-plugin",
+    "javascript",
+    "jquery",
+    "data",
+    "data-binding",
+    "form",
+    "input"
+  ],
+  "main": [
+    "jquery.myData.min.js"
+  ],
+  "ignore": [
+    "**/.*",
+    ".*",
+    "*.txt",
+    "*.json",
+    "*.md",
+    "gulpfile.js",
+    "LICENSE",
+    "node_modules",
+    "bower_components",
+    "*.txt",
+    "src",
+    "demo"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ange007/JQuery.myData.git"
+  },
+  "dependencies": {
+    "jquery": "~1.8.3"
+  }
+}
