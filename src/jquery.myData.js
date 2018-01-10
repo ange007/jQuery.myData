@@ -249,8 +249,7 @@
 		// Уничтожение плагина
 		destroy: function( )
 		{
-			unbind( );
-			
+			this.unbind( );
 			this.element.removeData( '_' + pluginName );
 		}
 	};
