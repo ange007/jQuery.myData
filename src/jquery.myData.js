@@ -250,6 +250,8 @@
 		destroy: function( )
 		{
 			unbind( );
+			
+			this.element.removeData( '_' + pluginName );
 		}
 	};
 
