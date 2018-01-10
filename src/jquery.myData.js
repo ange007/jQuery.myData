@@ -250,7 +250,9 @@
 		destroy: function( )
 		{
 			this.unbind( );
-			this.element.removeData( '_' + pluginName );
+			
+			if( isJQ ) { this.element.removeData( '_' + pluginName ); }
+			else { delete this.element[ 0 ][ '_' + pluginName ]; }
 		}
 	};
 
