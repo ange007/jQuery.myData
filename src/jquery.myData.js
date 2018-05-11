@@ -154,6 +154,7 @@
 			// Обработка установленных событий
 			// data-on="focusin,focusout:action" 
 			// data-on="[click:action1,change:action2]"
+			// data-on="click:test( '!!!' )"
 			this.element.on( onEvents.join( ' ' ), '[data-on]', function( event )
 			{
 				const element = $( this );
@@ -305,7 +306,6 @@
 	$.fn[ pluginName ] = function( params, callback )
 	{
 		const args = arguments;
-
 		// Если параметры это объект
 		if( params === undefined || typeof params === 'object' )
 		{

@@ -129,5 +129,9 @@ gulp.task( 'default', function( )
 	gulp.start( 'clean', 'build', 'build:min' );
 
 	// Надсмотрщики
+<<<<<<< HEAD
 	gulp.watch( paths.src + '/**/*.js', [ 'build:min', 'build' ] );
+=======
+	gulp.watch( paths.src + '/*.js', [ 'js:build', 'build:min' ] );
+>>>>>>> 88d2d1aafb51eed6cffdbc83f7357d0a588cab36
 } );
