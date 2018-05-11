@@ -22,7 +22,6 @@ var gulp = require( 'gulp' ),
 // Основные параметры плагина
 var params = 
 {
-	pluginName: 'styler',
 	fileName: 'jquery.myData'
 };
 
@@ -100,7 +99,7 @@ gulp.task( 'js:build', function( )
 					'' ].join( '\n' );
 	
 	// Собираем файл
-    return gulp.src( paths.src + '/*.js' )
+    return gulp.src( paths.src + '/**/*.js' )
 				.pipe( debug( { title: 'js:' } ) ) // Вывод пофайлового лога
 				.pipe( header( banner, { pkg: pkg } ) ) // Установка хидера
 				.pipe( babel( {	presets: [ 'es2015' ] } ) )
@@ -112,6 +111,7 @@ gulp.task( 'js:build', function( )
 // Задача по сборке обычной версии
 gulp.task( 'build', function( ) 
 {
+	bundle = bundles[ 'dev' ];
 	gulp.start( 'js:build' ); 
 } );
 
@@ -129,5 +129,5 @@ gulp.task( 'default', function( )
 	gulp.start( 'clean', 'build', 'build:min' );
 
 	// Надсмотрщики
-	gulp.watch( paths.src + '/*.js', [ 'js:build', 'build:min' ] );
+	gulp.watch( paths.src + '/**/*.js', [ 'build:min', 'build' ] );
 } );
