@@ -196,7 +196,7 @@
 						// Считываем значение элемента
 						const value = context._readElementValue( element, undefined );
 						// const callArgs = ( element.is( '[data-on-value]' ) ? args.concat( [ element, value ] ) : ( args || [ element, value ] ) );
-						const callArgs = args.concat( [ element, value ] );
+						const callArgs = [ element, value ].concat( [ args, event ] );
 
 						//
 						let result = undefined;
@@ -215,12 +215,19 @@
 						if( typeof context.callbacks.on === 'function' ) { context.callbacks.on( element, event.type, value ); }
 						else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'on', element, event.type, value ); }
 
-						// Прерываем всплытие события
+						//
 						if( result === false )
 						{
-							event.preventDefault( );
+							event.stopPropagation( );
 							
 							return false;
+						}
+						// 
+						else( result === true )
+						{
+							event.preventDefault( );
+
+							return true;
 						}
 					}
 				} );
@@ -289,8 +296,8 @@
 			}
 			// input
 			else if( element.is( 'input' ) || element.is( 'textarea' ) ) { value = $( element ).val( ); }
-			// Такое возможно при "contenteditable" элементе или при использовании "data-on"
-			else { value = $( element ).attr( 'value' ) || $( element ).html( ); };
+			//
+			else { value = $( element ).attr( 'value' ) || $( element ).attr( 'data-on-value' ) || $( element ).html( ); };
 			
 			return value;
 		},
@@ -306,6 +313,7 @@
 	$.fn[ pluginName ] = function( params, callback )
 	{
 		const args = arguments;
+
 		// Если параметры это объект
 		if( params === undefined || typeof params === 'object' )
 		{
@@ -313,7 +321,7 @@
 			this.each( function( )
 			{
 				const instance = isJQ ? $( this ).data( '_' + pluginName ) : $( this )[ 0 ][ '_' + pluginName ];
-				const id = ( typeof params === 'object' && params[ 'exlusive' ] ) ? '' : Math.random( ).toString( 36 ).substring( 7 );
+				const id = ( typeof params === 'object' && params.hasOwnProperty( 'exlusive' ) ) ? '' : Math.random( ).toString( 36 ).substring( 7 );
 				
 				if( !instance || id !== '' )
 				{
@@ -324,7 +332,7 @@
 				}
 			} );
 					
-			return this;
+			return $( this );
 		}
 		// Если параметры это строка
 		else if( typeof params === 'string' && params[0] !== '_' && params !== 'init' )
@@ -342,7 +350,7 @@
 				}
 			} );
 			
-			return returns !== undefined ? returns : this;
+			return returns !== undefined ? returns : $( this );
 		}
 	};
 } ) );

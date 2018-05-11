@@ -116,10 +116,10 @@
 			};
 
 			// Activate two-way binding
-			$( 'body' ).myData( data, function( type, element, key, value )
+			$( 'body' ).myData( data, function( type, element, propName, value )
 			{
-				if( key === 'text' ) { $( '#text-output' ).html( value ); }
-				else if( key === 'check' ) { $( '#text-input' ).attr( 'disabled', !value ); }
+				if( propName === 'text' ) { $( '#text-output' ).html( value ); }
+				else if( propName === 'check' ) { $( '#text-input' ).attr( 'disabled', !value ); }
 			} );
 
 			// Dynamical time update

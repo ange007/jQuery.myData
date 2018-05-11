@@ -16,86 +16,66 @@ Bower:
 $ bower install --save-dev ange007/jquery-mydata
 ```
 
-## Uses
+## Initialize
 ```javascript
-$( /* parentElement */ ).myData( /* data object */, /* callback from all actions */ );
+$( /* parentElement */ ).myData( /* data and event object */, /* callback from all actions */ );
 ```
 ```javascript
-$( 'body' ).myData( data, function( type, element, propName, value ) { ... } );
+$( /* parentElement */ ).myData( /* options object */, /* callbacks object */ );
 ```
-or 
 ```javascript
-$( /* parentElement */ ).myData( /* data object */, /* callbacks */ );
+$( 'body' ).myData( object, function( type, element, propName, value ) { ... } );
+```
+```javascript
+$( 'body' ).myData( { event: eventObject, data: dataObject }, function( type, element, propName, value ) { ... } );
 ```
 ```javascript
 $( 'body' ).myData( data, {
-	main: function( type, element, propName, value ) { ... }, // Main callback from all actions
+	main: function( type /* event type */, element, propName, value ) { ... }, // Main callback from all actions
 	set: function( element, propName, value ) { ... }, // Callback from SET action
 	get: function( element, propName, value ) { ... }, // Callback from GET action
 	on: function( element, propName, value ) { ... } // Callback from ON action
 } );
 ```
 
-## Example
-```html
-<body>
-	<div>
-		<label><b>Actual time:</b></label>
-		<span data-bind="time"></span>
-	</div>
+## Options
+```event (object)``` - object for **[data-on]** actions.
+```data (object)``` - object for **[data-bind]** actions.
+```exlusive (boolean, default: false)``` - recreate plugin and event listeners if the plugin has already been used on this element.
 
-	<br />
-	<div>
-		<label><b>Activated "input:text":</b></label>
-		<input type="checkbox" data-bind="check"/>
-	</div>	
+## Uses
+```javascript
+{
+	var data = { 
+		'time': getTime( ),
+		'check': false,
+		'test': function( msg ) { alert( 'Test alert: ' + msg ); }
+	};
 
-	<br />
-	<div>
-		<label><b>Text input test:</b></label> <input id="text-input" type="text" data-bind="text"/>
-		<div>You write: "<span id="text-output">*</span>"</div>
-	</div>
-
-	<br />
-	<div>
-		<a href="#" class="button" data-on="click:test(message)">Проверка</a>
-	</div>	
-</body>
+	$( 'body' ).myData( data, function( type, element, propName, value )
+	{
+		if( key === 'text' ) { $( '#text-output' ).html( value ); }
+		else if( key === 'check' ) { $( '#text-input' ).attr( 'disabled', !value ); }
+	} );
+}
 ```
 
-```javascript
-// Time formating
-function n( n )
-{
-	var ret = n > 9 ? "" + n: "0" + n;
-	return ret;
-}
-
-// Get actual time
-function getTime( )
-{
-	const time = new Date( );
-	return n( time.getHours( ) ) + ':' + n( time.getMinutes( ) ) + ':' + n( time.getSeconds( ) );
-}
-
-// Uses data
-var data = { 
-	'time': getTime( ),
-	'text': '',
-	'check': true,
-	'test': function( msg ) { alert( 'alert: ' + msg ); }
-};
-
-// Activate two-way binding
-$( 'body' ).myData( data, function( type, element, key, value )
-{
-	if( key === 'text' ) { $( '#text-output' ).html( value ); }
-	else if( key === 'check' ) { $( '#text-input' ).attr( 'disabled', !value ); }
-} );
-
-// Dynamical time update
-setInterval( function( ) { data.time = getTime( ); }, 1000 );
-
-// Changed data and checked data-binding
-data.text = 'My text';
+```html
+<span data-bind="time"></span>
+```
+```html
+<input type="checkbox" data-bind="check"/>
+```
+```html
+<label><b>Text input:</b></label> <input id="text-input" type="text" data-bind="text"/>
+<div>You write: "<span id="text-output">*</span>"</div>
+```
+```html
+<a href="#" class="button" data-on="click:test( 'message' )">Test</a>
+```
+```html
+<input type="checkbox" data-on="console.warn( 'click' )"/>
+```
+```html
+<input type="checkbox" data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"/>
 ```
