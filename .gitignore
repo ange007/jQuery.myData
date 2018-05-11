@@ -2,6 +2,7 @@ node_modules
 nbproject
 build
 dist
+.vscode
 bower_components
 npm-debug.log
 TODO.txt
