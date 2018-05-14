@@ -101,9 +101,9 @@ gulp.task( 'js:build', function( )
 	// Собираем файл
     return gulp.src( paths.src + '/**/*.js' )
 				.pipe( debug( { title: 'js:' } ) ) // Вывод пофайлового лога
-				.pipe( header( banner, { pkg: pkg } ) ) // Установка хидера
 				.pipe( babel( {	presets: [ 'es2015' ] } ) )
 				.pipe( gulpif( bundle.compress, uglify( { mangle: true, compress: false } ) ) ) //
+				.pipe( header( banner, { pkg: pkg } ) ) // Установка хидера
 				.pipe( rename( fileName ) ) // Переименовываем
 				.pipe( gulp.dest( paths.build ) );
 } );

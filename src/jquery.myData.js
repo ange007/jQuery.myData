@@ -1,8 +1,3 @@
-/* @todo:
- * [+] data-bind="opt" - привязка к объекту
- * [+] data-on="click:close" - привязка к событию
- */
-
 ;( function( factory )
 {
 	// AMD
@@ -22,7 +17,7 @@
 	const isJQ = !!( window.jQuery );
 
 	// Plugin
-	let Plugin = function( element, targetObject, callback )
+	let Plugin = function( element, targetOrOptions, callback )
 	{
 		//
 		this.bindings = [ ];
@@ -31,17 +26,32 @@
 		//
 		this.element = $( element );
 		this.callbacks = { };
+		this.keys = { 
+			'event': 'data-on',
+			'event-value': 'data-on-value',
+			'data': 'data-bind',
+		};
 
 		// Event and Data target
-		if( typeof targetObject === 'object' && targetObject.hasOwnProperty( 'event' ) && targetObject.hasOwnProperty( 'data' ) )
+		if( typeof targetOrOptions === 'object' && targetOrOptions.hasOwnProperty( 'event' ) && targetOrOptions.hasOwnProperty( 'data' ) )
 		{
-			this.eventTarget = targetObject.event;
-			this.dataTarget = targetObject.data;
+			this.eventTarget = targetOrOptions.event;
+			this.dataTarget = targetOrOptions.data;
+
+			// Custom keys
+			if( typeof targetOrOptions[ 'data-keys' ] === 'object' )
+			{
+				this.keys = { 
+					'event': targetOrOptions[ 'data-keys' ][ 'event' ] || this.keys[ 'event' ],
+					'event-value': targetOrOptions[ 'data-keys' ][ 'event-value' ] || this.keys[ 'event-value' ],
+					'data': targetOrOptions[ 'data-keys' ][ 'data' ] || this.keys[ 'data' ],
+				};
+			}
 		}
 		else
 		{
-			this.eventTarget = targetObject;
-			this.dataTarget = targetObject;
+			this.eventTarget = targetOrOptions;
+			this.dataTarget = targetOrOptions;
 		}
 
 		// Callback`s
@@ -71,10 +81,10 @@
 			// Формируем список проверяемых параметров
 			// @todo: Будет не верно работать в случае с динамически изменяемым содержимим элемента 
 			//		(так как считывание происходит только один раз)
-			this.element.find( '[data-bind]' ).each( function( index, item )
+			this.element.find( '[' + this.keys[ 'data' ] + ']' ).each( function( index, item )
 			{
 				let element = $( item ),
-					propName = element.attr( 'data-bind' ) || '';
+					propName = element.attr( this.keys[ 'data' ] ) || '';
 				
 				if( propName === '' ) { return; }
 
@@ -90,9 +100,9 @@
 		unbind: function( )
 		{
 			// Отключение проверки событий
-			this.element.off( '.' + pluginName, '[data-bind]' )
-						.off( '.' + pluginName, '[data-on]' )
-						.off( '.' + pluginName, '[data-on-value]' );
+			this.element.off( '.' + pluginName, '[' + this.keys[ 'data' ] + ']' )
+						.off( '.' + pluginName, '[' + this.keys[ 'event' ] + ']' )
+						.off( '.' + pluginName, '[' + this.keys[ 'event-value' ] + ']' );
 						
 			// Таймер проверки значений
 			clearInterval( this.checkTimer );
@@ -113,10 +123,10 @@
 
 			// Реакция на смену состояния элемента
 			// data-bind="key" 
-			this.element.on( bindEvents.join( ' ' ), '[data-bind]', function( event )
+			this.element.on( bindEvents.join( ' ' ), '[' + this.keys[ 'data' ] + ']', function( event )
 			{
 				let element = $( event.target );
-				let	targetKey = element.attr( 'data-bind' );
+				let	targetKey = element.attr( this.keys[ 'data' ] );
 				let	value = undefined;
 
 				// Заменяем значение в список
@@ -155,10 +165,10 @@
 			// data-on="focusin,focusout:action" 
 			// data-on="[click:action1,change:action2]"
 			// data-on="click:test( '!!!' )"
-			this.element.on( onEvents.join( ' ' ), '[data-on]', function( event )
+			this.element.on( onEvents.join( ' ' ), '[' + this.keys[ 'event' ] + ']', function( event )
 			{
 				const element = $( this );
-				const actionData = element.attr( 'data-on' );
+				const actionData = element.attr( this.keys[ 'event' ] );
 
 				//
 				let actionList = [ ];
@@ -166,7 +176,7 @@
 				//
 				if( typeof actionData !== 'string' )
 				{
-					console.error( 'jQuery.myData: Empty data in [data-on].' );
+					console.error( 'jQuery.myData: Empty data in [' + this.keys[ 'event' ] + '].' );
 					return ;
 				}
 				else
@@ -195,7 +205,7 @@
 						
 						// Считываем значение элемента
 						const value = context._readElementValue( element, undefined );
-						// const callArgs = ( element.is( '[data-on-value]' ) ? args.concat( [ element, value ] ) : ( args || [ element, value ] ) );
+						// const callArgs = ( element.is( '[' + this.keys[ 'event-value' ] + ']' ) ? args.concat( [ element, value ] ) : ( args || [ element, value ] ) );
 						const callArgs = [ element, value ].concat( [ args, event ] );
 
 						//
@@ -297,7 +307,7 @@
 			// input
 			else if( element.is( 'input' ) || element.is( 'textarea' ) ) { value = $( element ).val( ); }
 			//
-			else { value = $( element ).attr( 'value' ) || $( element ).attr( 'data-on-value' ) || $( element ).html( ); };
+			else { value = $( element ).attr( 'value' ) || $( element ).attr( this.keys[ 'event-value' ] ) || $( element ).html( ); };
 			
 			return value;
 		},
