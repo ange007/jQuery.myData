@@ -315,7 +315,7 @@
 		// Уничтожение плагина
 		destroy: function( )
 		{
-			unbind( );
+			this.unbind( );
 		}
 	};
 
