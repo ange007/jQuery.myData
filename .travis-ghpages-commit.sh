@@ -22,7 +22,7 @@ git rm *;
 # перемещаем файлы
 echo "Копирование нужных файлов...";
 cp -rp ${TRAVIS_BUILD_DIR}/docs/* ${DIST_PATH};
-cp -rp ${TRAVIS_BUILD_DIR}/build/ ${DIST_PATH};
+cp -rp ${TRAVIS_BUILD_DIR}/build/* ${DIST_PATH};
 
 # заменяем пути к скриптам/css в исходниках
 sed -i -e "s/\.\.\//\.\//g" ${DIST_PATH}/index.html

@@ -17,7 +17,7 @@ git rm *;
 # перемещаем файлы
 echo "Копирование нужных файлов...";
 cp -rp ${TRAVIS_BUILD_DIR}/build/* ${DIST_PATH};
-cp -rp ${TRAVIS_BUILD_DIR}/docs/ ${DIST_PATH};
+cp -rp ${TRAVIS_BUILD_DIR}/docs/* ${DIST_PATH};
 cp -rp ${TRAVIS_BUILD_DIR}/package.json ${DIST_PATH};
 cp -rp ${TRAVIS_BUILD_DIR}/composer.json ${DIST_PATH};
 cp -rp ${TRAVIS_BUILD_DIR}/bower.json ${DIST_PATH};
