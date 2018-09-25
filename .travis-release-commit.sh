@@ -1,6 +1,6 @@
 #!/bin/bash
 # encoding: utf-8
- 
+
 VERS=$(cat package.json | jq --raw-output '.version');
 TARGET_BRANCH="release";
 DIST_PATH="${TRAVIS_BUILD_DIR}/actual-release";
@@ -12,11 +12,7 @@ cd ${TRAVIS_BUILD_DIR} && git clone ${REPO_URL} "actual-${TARGET_BRANCH}";
 echo "Считывание версии из репозитория и очистка директории...";
 cd ${DIST_PATH};
 git checkout ${TARGET_BRANCH} || git checkout --orphan ${TARGET_BRANCH};
-git rm --cached;
-
-# удаление файлов из директории
-find . -type f ! -name '.git' -delete;
-# rm -rf out/**/* || exit 0;
+git rm *;
 
 # перемещаем файлы
 echo "Копирование нужных файлов...";
@@ -46,4 +42,4 @@ else
 fi
 
 # удаляем директорию
-rm -rf ${DIST_PATH}
+rm -rf ${DIST_PATH};
