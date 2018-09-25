@@ -84,7 +84,7 @@
 			this.element.find( '[' + this.keys[ 'data' ] + ']' ).each( function( index, item )
 			{
 				let element = $( item ),
-					propName = element.attr( this.keys[ 'data' ] ) || '';
+					propName = element.attr( context.keys[ 'data' ] ) || '';
 				
 				if( propName === '' ) { return; }
 
@@ -126,7 +126,7 @@
 			this.element.on( bindEvents.join( ' ' ), '[' + this.keys[ 'data' ] + ']', function( event )
 			{
 				let element = $( event.target );
-				let	targetKey = element.attr( this.keys[ 'data' ] );
+				let	targetKey = element.attr( context.keys[ 'data' ] );
 				let	value = undefined;
 
 				// Заменяем значение в список
@@ -168,7 +168,7 @@
 			this.element.on( onEvents.join( ' ' ), '[' + this.keys[ 'event' ] + ']', function( event )
 			{
 				const element = $( this );
-				const actionData = element.attr( this.keys[ 'event' ] );
+				const actionData = element.attr( context.keys[ 'event' ] );
 
 				//
 				let actionList = [ ];
@@ -176,7 +176,7 @@
 				//
 				if( typeof actionData !== 'string' )
 				{
-					console.error( 'jQuery.myData: Empty data in [' + this.keys[ 'event' ] + '].' );
+					console.error( 'jQuery.myData: Empty data in [' + context.keys[ 'event' ] + '].' );
 					return ;
 				}
 				else
@@ -205,7 +205,7 @@
 						
 						// Считываем значение элемента
 						const value = context._readElementValue( element, undefined );
-						// const callArgs = ( element.is( '[' + this.keys[ 'event-value' ] + ']' ) ? args.concat( [ element, value ] ) : ( args || [ element, value ] ) );
+						// const callArgs = ( element.is( '[' + context.keys[ 'event-value' ] + ']' ) ? args.concat( [ element, value ] ) : ( args || [ element, value ] ) );
 						const callArgs = [ element, value ].concat( [ args, event ] );
 
 						//
@@ -290,13 +290,14 @@
 		// Считывание значения
 		_readElementValue: function( element, oldValue )
 		{
-			let value = undefined;
+			let value = undefined,
+				elementValue = $( element ).attr( 'value' );
 			
 			// input:checkbox
 			if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) )
 			{
-				if( typeof oldValue === 'boolean' || $( element ).attr( 'value' ) === undefined ) { value = $( element ).is( ':checked' ); }
-				else { value = $( element ).val( ); }
+				if( typeof oldValue !== 'boolean' && elementValue !== undefined ) { value = $( element ).is( ':checked' ) ? elementValue : '' }
+				else { value = $( element ).is( ':checked' ); }
 			}
 			// select
 			else if( element.is( 'select' ) ) 
@@ -306,8 +307,10 @@
 			}
 			// input
 			else if( element.is( 'input' ) || element.is( 'textarea' ) ) { value = $( element ).val( ); }
-			//
-			else { value = $( element ).attr( 'value' ) || $( element ).attr( this.keys[ 'event-value' ] ) || $( element ).html( ); };
+			// link
+			else if( element.is( 'a' ) ) { value = $( element ).attr( 'href' ); }
+			// other
+			else { value = elementValue || $( element ).attr( this.keys[ 'event-value' ] ) || $( element ).html( ); };
 			
 			return value;
 		},
