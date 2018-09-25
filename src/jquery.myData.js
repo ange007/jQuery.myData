@@ -291,7 +291,7 @@
 		_readElementValue: function( element, oldValue )
 		{
 			let value = undefined,
-				elementValue = $( element ).attr( 'value' )
+				elementValue = $( element ).attr( 'value' ),
 				customValue = $( element ).attr( this.keys[ 'event-value' ] );
 
 			// input:checkbox

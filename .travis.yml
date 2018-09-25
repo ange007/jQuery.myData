@@ -39,6 +39,9 @@ deploy:
     email: $GIT_EMAIL
     api_key: $NPM_TOKEN
     skip_cleanup: true
+    file:
+      - ${TRAVIS_BUILD_DIR}/build/jquery.myData.js
+      - ${TRAVIS_BUILD_DIR}/build/jquery.myData.min.js
     on:
       tags: true
 
