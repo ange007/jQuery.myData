@@ -1,19 +1,14 @@
-'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 /**
- * jquery.myData - Small JQuery&Zepto plugin for two-ways data binding.
- * @version v0.1.0
+ * jquery.mydata - Small JQuery&Zepto plugin for two-ways data binding.
+ * @version v0.2.1
  * @link https://github.com/ange007/JQuery.myData
  * @license MIT
  * @author Borisenko Vladimir
  */
 
-/* @todo:
- * [+] data-bind="opt" - привязка к объекту
- * [+] data-on="click:close" - привязка к событию
- */
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 ;(function (factory) {
 	// AMD
@@ -36,16 +31,38 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 	var pluginName = 'myData';
 	var isJQ = !!window.jQuery;
 
-	// Плагин
-	var Plugin = function Plugin(element, targetObject, callback) {
+	// Plugin
+	var Plugin = function Plugin(element, targetOrOptions, callback) {
 		//
 		this.bindings = [];
 		this.checkTimer = undefined;
 
-		// Запоминаем
+		//
 		this.element = $(element);
-		this.targetObject = targetObject;
 		this.callbacks = {};
+		this.keys = {
+			'event': 'data-on',
+			'event-value': 'data-on-value',
+			'data': 'data-bind'
+		};
+
+		// Event and Data target
+		if ((typeof targetOrOptions === 'undefined' ? 'undefined' : _typeof(targetOrOptions)) === 'object' && targetOrOptions.hasOwnProperty('event') && targetOrOptions.hasOwnProperty('data')) {
+			this.eventTarget = targetOrOptions.event;
+			this.dataTarget = targetOrOptions.data;
+
+			// Custom keys
+			if (_typeof(targetOrOptions['data-keys']) === 'object') {
+				this.keys = {
+					'event': targetOrOptions['data-keys']['event'] || this.keys['event'],
+					'event-value': targetOrOptions['data-keys']['event-value'] || this.keys['event-value'],
+					'data': targetOrOptions['data-keys']['data'] || this.keys['data']
+				};
+			}
+		} else {
+			this.eventTarget = targetOrOptions;
+			this.dataTarget = targetOrOptions;
+		}
 
 		// Callback`s
 		if (typeof callback === 'function') {
@@ -57,7 +74,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 			this.callbacks.on = callback.on;
 		}
 
-		// Инициаплизация
+		// Init
 		this.bind();
 	};
 
@@ -69,9 +86,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 			// Формируем список проверяемых параметров
 			// @todo: Будет не верно работать в случае с динамически изменяемым содержимим элемента 
 			//		(так как считывание происходит только один раз)
-			this.element.find('[data-bind]').each(function (index, item) {
+			this.element.find('[' + this.keys['data'] + ']').each(function (index, item) {
 				var element = $(item),
-				    propName = element.attr('data-bind') || '';
+				    propName = element.attr(context.keys['data']) || '';
 
 				if (propName === '') {
 					return;
@@ -88,8 +105,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		// Снятие событий и обработчиков
 		unbind: function unbind() {
 			// Отключение проверки событий
-			this.element.off('.' + pluginName, '[data-bind]');
-			this.element.off('.' + pluginName, '[data-on]');
+			this.element.off('.' + pluginName, '[' + this.keys['data'] + ']').off('.' + pluginName, '[' + this.keys['event'] + ']').off('.' + pluginName, '[' + this.keys['event-value'] + ']');
 
 			// Таймер проверки значений
 			clearInterval(this.checkTimer);
@@ -110,9 +126,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 			// Реакция на смену состояния элемента
 			// data-bind="key" 
-			this.element.on(bindEvents.join(' '), '[data-bind]', function (event) {
+			this.element.on(bindEvents.join(' '), '[' + this.keys['data'] + ']', function (event) {
 				var element = $(event.target);
-				var targetKey = element.attr('data-bind');
+				var targetKey = element.attr(context.keys['data']);
 				var value = undefined;
 
 				// Заменяем значение в список
@@ -134,12 +150,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 						item.value = value;
 
 						// Установка значения
-						if (typeof context.targetObject[setFunctionName] === 'function') {
-							context.targetObject[setFunctionName].apply(context.targetObject, [value]);
-						} else if (typeof context.targetObject[targetKey] === 'function') {
-							context.targetObject[targetKey].apply(context.targetObject, [value]);
-						} else if (context.targetObject.hasOwnProperty(targetKey)) {
-							context.targetObject[targetKey] = value;
+						if (typeof context.dataTarget[setFunctionName] === 'function') {
+							context.dataTarget[setFunctionName].apply(context.dataTarget, [value]);
+						} else if (typeof context.dataTarget[targetKey] === 'function') {
+							context.dataTarget[targetKey].apply(context.dataTarget, [value]);
+						} else if (context.dataTarget.hasOwnProperty(targetKey)) {
+							context.dataTarget[targetKey] = value;
 						}
 
 						break;
@@ -155,45 +171,86 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 			});
 
 			// Обработка установленных событий
-			// data-on="click,change:close" 
-			this.element.on(onEvents.join(' '), '[data-on]', function (event) {
-				var element = $(event.target);
-				var actionData = element.attr('data-on');
-				var value = undefined;
+			// data-on="focusin,focusout:action" 
+			// data-on="[click:action1,change:action2]"
+			// data-on="click:test( '!!!' )"
+			this.element.on(onEvents.join(' '), '[' + this.keys['event'] + ']', function (event) {
+				var element = $(this);
+				var actionData = element.attr(context.keys['event']);
 
-				var onData = actionData.split(':');
-				var eventTypes = onData[0].split(',');
-				var action = onData[1];
-				var actionFunc = /([a-zA-Z0-9,\.\-_\/]+)(?:\(([^)]+)\))?$/.exec(action) || false;
+				//
+				var actionList = [];
 
-				// Если данной событие не указано в перечне - игнорируем
-				if (eventTypes.indexOf(event.type) < 0) {
+				//
+				if (typeof actionData !== 'string') {
+					console.error('jQuery.myData: Empty data in [' + context.keys['event'] + '].');
 					return;
+				} else {
+					actionList = actionData.indexOf('[') === 0 ? (actionData.match(/[\[\{}](.*?)[\}\]]/)[1] || '').split(',') : [actionData];
 				}
 
-				// Вызов функции
-				if (actionFunc) {
-					var name = actionFunc[1];
-					var args = typeof actionFunc[2] !== 'string' ? [] : actionFunc[2].split(',').map(function (item) {
-						return item.trim();
-					});
+				//
+				actionList.forEach(function (action, i, arr) {
+					var onData = action.indexOf(':') >= 0 ? action.split(':') : ['click', action];
+					var eventTypes = onData[0].trim().split(',');
+					var handlerName = onData[1].trim();
+					var handlerFunc = handlerName.match(/([a-zA-Z0-9,\.\-_\/]+)(?:\(([^)]+)\))?$/) || false;
 
-					//
-					if (typeof context.targetObject[name] === 'function') {
+					// Если данной событие не указано в перечне - игнорируем
+					if (eventTypes.indexOf(event.type) < 0) {
+						return;
+					}
+
+					// Вызов функции
+					if (handlerFunc) {
+						var name = handlerFunc[1];
+						var args = typeof handlerFunc[2] === 'string' ? handlerFunc[2].split(',').map(function (item) {
+							return item.trim().match(/^['"]{0,}(.*?)['"]{0,}$/)[1] || '';
+						}) : [];
+						var targetFuncExist = context.eventTarget !== undefined && typeof context.eventTarget[name] === 'function';
+						var windowFuncExist = typeof window[name] === 'function';
+
 						// Считываем значение элемента
-						value = context._readElementValue(element, undefined);
-
-						// Вызываем функцию
-						context.targetObject[name].apply(context.targetObject, args.concat([value]));
+						var value = context._readElementValue(element, undefined);
+						// const callArgs = ( element.is( '[' + context.keys[ 'event-value' ] + ']' ) ? args.concat( [ element, value ] ) : ( args || [ element, value ] ) );
+						var callArgs = [element, value].concat([args, event]);
 
 						//
+						var result = undefined;
+
+						// Вызываем функцию
+						if (targetFuncExist) {
+							result = context.eventTarget[name].apply(context.eventTarget, callArgs);
+						} else {
+							try {
+								result = eval(name).apply(window, callArgs);
+							} catch (err) {
+								console.warn('jQuery.myData: Could not call - "' + name + '"');
+							}
+						}
+
+						// Вызываем события
 						if (typeof context.callbacks.on === 'function') {
 							context.callbacks.on(element, event.type, value);
 						} else if (typeof context.callbacks.main === 'function') {
 							context.callbacks.main('on', element, event.type, value);
 						}
+
+						//
+						if (result === false) {
+							event.stopPropagation();
+
+							return false;
+						}
+						// 
+						else result === true;
+						{
+							event.preventDefault();
+
+							return true;
+						}
 					}
-				}
+				});
 			});
 		},
 
@@ -217,12 +274,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 					var getFunctionName = 'get' + targetKey.charAt(0).toUpperCase() + targetKey.substr(1);
 
 					// Проверка функции "get"
-					if (typeof context.targetObject[getFunctionName] === 'function') {
-						value = context.targetObject[getFunctionName]();
-					} else if (typeof context.targetObject[targetKey] === 'function') {
-						value = context.targetObject[targetKey]();
-					} else if (context.targetObject.hasOwnProperty(targetKey)) {
-						value = context.targetObject[targetKey];
+					if (typeof context.dataTarget[getFunctionName] === 'function') {
+						value = context.dataTarget[getFunctionName]();
+					} else if (typeof context.dataTarget[targetKey] === 'function') {
+						value = context.dataTarget[targetKey]();
+					} else if (context.dataTarget.hasOwnProperty(targetKey)) {
+						value = context.dataTarget[targetKey];
 					}
 
 					// Меняем значение элемента
@@ -251,14 +308,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 		// Считывание значения
 		_readElementValue: function _readElementValue(element, oldValue) {
-			var value = undefined;
+			var value = undefined,
+			    elementValue = $(element).attr('value');
+			customValue = $(element).attr(this.keys['event-value']);
 
 			// input:checkbox
 			if (element.is('input[type="checkbox"]') || element.is('input[type="radio"]')) {
-				if (typeof oldValue === 'boolean' || $(element).attr('value') === undefined) {
-					value = $(element).is(':checked');
+				if (typeof oldValue !== 'boolean' && elementValue !== undefined) {
+					value = $(element).is(':checked') ? elementValue : '';
 				} else {
-					value = $(element).val();
+					value = $(element).is(':checked');
 				}
 			}
 			// select
@@ -273,17 +332,22 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 				else if (element.is('input') || element.is('textarea')) {
 						value = $(element).val();
 					}
-					// Такое возможно при "contenteditable" элементе или при использовании "data-on"
-					else {
-							value = $(element).attr('value') || $(element).html();
-						};
+					// link
+					else if (element.is('a')) {
+							value = $(element).attr('href');
+						}
+
+			// Если не удалось считать значение
+			if (value === '' || value === undefined) {
+				value = elementValue || customValue || $(element).html();
+			};
 
 			return value;
 		},
 
 		// Уничтожение плагина
 		destroy: function destroy() {
-			unbind();
+			this.unbind();
 		}
 	};
 
@@ -296,8 +360,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 			// Проходим по компонентам
 			this.each(function () {
 				var instance = isJQ ? $(this).data('_' + pluginName) : $(this)[0]['_' + pluginName];
+				var id = (typeof params === 'undefined' ? 'undefined' : _typeof(params)) === 'object' && params.hasOwnProperty('exlusive') ? '' : Math.random().toString(36).substring(7);
 
-				if (!instance) {
+				if (!instance || id !== '') {
 					var plugin = new Plugin(this, params, callback);
 
 					if (isJQ) {
@@ -308,7 +373,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 				}
 			});
 
-			return this;
+			return $(this);
 		}
 		// Если параметры это строка
 		else if (typeof params === 'string' && params[0] !== '_' && params !== 'init') {
@@ -323,7 +388,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 					}
 				});
 
-				return returns !== undefined ? returns : this;
+				return returns !== undefined ? returns : $(this);
 			}
 	};
 });
