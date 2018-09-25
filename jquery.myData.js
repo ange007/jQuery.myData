@@ -309,8 +309,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		// Считывание значения
 		_readElementValue: function _readElementValue(element, oldValue) {
 			var value = undefined,
-			    elementValue = $(element).attr('value');
-			customValue = $(element).attr(this.keys['event-value']);
+			    elementValue = $(element).attr('value'),
+			    customValue = $(element).attr(this.keys['event-value']);
 
 			// input:checkbox
 			if (element.is('input[type="checkbox"]') || element.is('input[type="radio"]')) {
