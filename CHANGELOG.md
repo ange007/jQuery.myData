@@ -1,4 +1,6 @@
 # CHANGELOG
+## v0.2.1:
+* Read link ```href``` from ```data-on``` action.
 ## v0.2.0:
 * Add ```data-keys``` options for uses custom data keys.
 ## v0.1.2:
