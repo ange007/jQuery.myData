@@ -21,8 +21,8 @@ after_success:
   - git config --global user.email "${GIT_EMAIL}"
   - chmod +x ${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh ### Need use: "git update-index --add --chmod=+x .travis-ghpages-commit.sh" in project directory
   - chmod +x ${TRAVIS_BUILD_DIR}/.travis-release-commit.sh ### Need use: "git update-index --add --chmod=+x .travis-release-commit.sh" in project directory
-  # - ${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh
-  # - ${TRAVIS_BUILD_DIR}/.travis-release-commit.sh
+  - ${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh
+  - ${TRAVIS_BUILD_DIR}/.travis-release-commit.sh
 
 deploy:
   provider: releases

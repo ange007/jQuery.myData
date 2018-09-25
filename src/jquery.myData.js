@@ -291,8 +291,9 @@
 		_readElementValue: function( element, oldValue )
 		{
 			let value = undefined,
-				elementValue = $( element ).attr( 'value' );
-			
+				elementValue = $( element ).attr( 'value' )
+				customValue = $( element ).attr( this.keys[ 'event-value' ] );
+
 			// input:checkbox
 			if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) )
 			{
@@ -309,8 +310,9 @@
 			else if( element.is( 'input' ) || element.is( 'textarea' ) ) { value = $( element ).val( ); }
 			// link
 			else if( element.is( 'a' ) ) { value = $( element ).attr( 'href' ); }
-			// other
-			else { value = elementValue || $( element ).attr( this.keys[ 'event-value' ] ) || $( element ).html( ); };
+
+			// Если не удалось считать значение
+			if( value === '' || value === undefined ) { value = elementValue || customValue || $( element ).html( ); };
 			
 			return value;
 		},

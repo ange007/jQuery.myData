@@ -1,5 +1,5 @@
 {
-  "name": "jquery.myData",
+  "name": "jquery.mydata",
   "version": "0.2.0",
   "author": "Borisenko Vladimir",
   "description": "Small JQuery&Zepto plugin for two-ways data binding.",
