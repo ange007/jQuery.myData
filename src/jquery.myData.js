@@ -126,8 +126,8 @@
 			this.element.on( bindEvents.join( ' ' ), '[' + this.keys[ 'data' ] + ']', function( event )
 			{
 				let element = $( event.target );
-				let	targetKey = element.attr( context.keys[ 'data' ] );
-				let	value = undefined;
+				let targetKey = element.attr( context.keys[ 'data' ] );
+				let value = undefined;
 
 				// Заменяем значение в список
 				for( let i in context.bindings )
@@ -256,10 +256,10 @@
 				{
 					// Изменяемая ссылка на текущий элемент
 					let item = context.bindings[ i ];
-					let	element = $( item.element );
-					let	targetKey = item.property;
-					let	oldValue = item.value;
-					let	value = '';
+					let element = $( item.element );
+					let targetKey = item.property;
+					let oldValue = item.value;
+					let value = '';
 
 					// Имя функции для установки значения
 					let getFunctionName = 'get' + targetKey.charAt( 0 ).toUpperCase( ) + targetKey.substr( 1 );
@@ -290,9 +290,9 @@
 		// Считывание значения
 		_readElementValue: function( element, oldValue )
 		{
-			let value = undefined,
-				elementValue = $( element ).attr( 'value' )
-				customValue = $( element ).attr( this.keys[ 'event-value' ] );
+			let value = undefined;
+			let elementValue = $( element ).attr( 'value' );
+			let customValue = $( element ).attr( this.keys[ 'event-value' ] );
 
 			// input:checkbox
 			if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) )
