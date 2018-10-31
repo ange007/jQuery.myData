@@ -157,8 +157,8 @@
 				}
 				
 				//
-				if( typeof context.callbacks.set === 'function' ) {	context.callbacks.set( element, targetKey, value, { name: targetKey } ); }
-				else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'set', element, targetKey, value, { name: targetKey } ); }
+				if( typeof context.callbacks.set === 'function' ) {	context.callbacks.set( element, targetKey, value, { } ); }
+				else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'set', element, targetKey, value, { } ); }
 			} );
 			
 			// Обработка установленных событий
@@ -222,8 +222,8 @@
 						}
 						
 						// Вызываем события
-						if( typeof context.callbacks.on === 'function' ) { context.callbacks.on( element, event.type, value, { name: name, value: args } ); }
-						else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'on', element, event.type, value, { name: name, value: args } ); }
+						if( typeof context.callbacks.on === 'function' ) { context.callbacks.on( element, name, value, { type: event.type, args: args } ); }
+						else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'on', element, name, value, { type: event.type, args: args } ); }
 
 						//
 						if( result === false )
@@ -280,8 +280,8 @@
 						else { $( element ).html( value ); }
 
 						//
-						if( typeof context.callbacks.get === 'function' ) { context.callbacks.get( element, targetKey, value, { name: targetKey } ); }
-						else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'get', element, targetKey, value, { name: targetKey } ); }
+						if( typeof context.callbacks.get === 'function' ) { context.callbacks.get( element, targetKey, value, { } ); }
+						else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'get', element, targetKey, value, { } ); }
 					}
 				}
 			}, delay );
