@@ -203,9 +203,13 @@
 						const targetFuncExist = ( context.eventTarget !== undefined && typeof context.eventTarget[ name ] === 'function' );
 						const windowFuncExist = ( typeof window[ name ] === 'function' );
 						
-						// Read value and arguments
+						// Read value
 						const value = context._readElementValue( element, undefined );
-						const callArgs = $.extend( [ ], ( args.length > 0 ? [ args, [ element, event, value ] ] : [ value, [ element, event, value ] ] ) );
+
+						//
+						let callArgs = $.extend( [ ], args );
+						if( callArgs.length > 0 ) { callArgs.push( [ element, event, value ] ); }
+						else { callArgs = [ value, [ element, event, value ] ]; }
 
 						//
 						let result = undefined;
@@ -284,15 +288,17 @@
 			}, delay );
 		},
 		
-		// Считывание значения
+		// Read value
 		_readElementValue: function( element, oldValue )
 		{
 			let value = undefined;
 			let elementValue = $( element ).attr( 'value' );
 			let customValue = $( element ).attr( this.keys[ 'event-value' ] );
 
+			// data-on-value 
+			if( customValue !== undefined && customValue !== '' ) { value = customValue; }
 			// input:checkbox
-			if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) )
+			else if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) )
 			{
 				if( typeof oldValue !== 'boolean' && elementValue !== undefined ) { value = $( element ).is( ':checked' ) ? elementValue : '' }
 				else { value = $( element ).is( ':checked' ); }
@@ -309,7 +315,7 @@
 			else if( element.is( 'a' ) ) { value = $( element ).attr( 'href' ); }
 
 			// Если не удалось считать значение
-			if( value === '' || value === undefined ) { value = elementValue || customValue || $( element ).html( ); };
+			if( value === '' || value === undefined ) { value = elementValue || $( element ).html( ); };
 			
 			return value;
 		},
