@@ -73,7 +73,7 @@
 
 	Plugin.prototype =
 	{
-		// Навешивание событий и обработчиков
+		// Add events
 		bind: function( )
 		{
 			const context = this;
@@ -88,7 +88,7 @@
 				
 				if( propName === '' ) { return; }
 
-				// Записываем элемент
+				// Add element to list
 				context.bindings.push( { element: item, property: propName, value: undefined } );
 			} );
 			
@@ -96,7 +96,7 @@
 			this._setCheckTimer( );
 		},
 		
-		// Снятие событий и обработчиков
+		// Remove events
 		unbind: function( )
 		{
 			// Отключение проверки событий
@@ -104,7 +104,7 @@
 						.off( '.' + pluginName, '[' + this.keys[ 'event' ] + ']' )
 						.off( '.' + pluginName, '[' + this.keys[ 'event-value' ] + ']' );
 						
-			// Таймер проверки значений
+			// Clear timer
 			clearInterval( this.checkTimer );
 			
 			//
@@ -136,18 +136,18 @@
 					
 					if( item.element !== event.target || item.property !== targetKey ) { continue; }
 
-					// Считываем значение
+					// Read value
 					value = context._readElementValue( element, item.value );
 
-					// Имя функции для установки значения
+					// Generate function name
 					let setFunctionName = 'set' + targetKey.charAt( 0 ).toUpperCase( ) + targetKey.substr( 1 );
 
-					// Если значение изменилось с прошлого раза
+					// Only if value changed
 					if( value !== item.value )
 					{
 						item.value = value;
 						
-						// Установка значения
+						// Send value
 						if( typeof context.dataTarget[ setFunctionName ] === 'function' ) { context.dataTarget[ setFunctionName ].apply( context.dataTarget, [ value ] );	}
 						else if( typeof context.dataTarget[ targetKey ] === 'function' ) { context.dataTarget[ targetKey ].apply( context.dataTarget, [ value ] ); }
 						else if( context.dataTarget.hasOwnProperty( targetKey ) ) { context.dataTarget[ targetKey ] = value; }
@@ -203,15 +203,14 @@
 						const targetFuncExist = ( context.eventTarget !== undefined && typeof context.eventTarget[ name ] === 'function' );
 						const windowFuncExist = ( typeof window[ name ] === 'function' );
 						
-						// Считываем значение элемента
+						// Read value and arguments
 						const value = context._readElementValue( element, undefined );
-						// const callArgs = ( element.is( '[' + context.keys[ 'event-value' ] + ']' ) ? args.concat( [ element, value ] ) : ( args || [ element, value ] ) );
-						const callArgs = [ element, value ].concat( [ args, event ] );
+						const callArgs = $.extend( [ ], ( args.length > 0 ? [ args, [ element, event, value ] ] : [ value, [ element, event, value ] ] ) );
 
 						//
 						let result = undefined;
 
-						// Вызываем функцию
+						// Call function
 						if( targetFuncExist ) 
 						{ 
 							result = context.eventTarget[ name ].apply( context.eventTarget, callArgs );
@@ -221,7 +220,7 @@
 							try { result = eval( name ).apply( window, callArgs ); } catch( err ) { console.warn( 'jQuery.myData: Could not call - "' + name + '"' ); }
 						}
 						
-						// Вызываем события
+						// Callback
 						if( typeof context.callbacks.on === 'function' ) { context.callbacks.on( element, name, value, { type: event.type, args: args } ); }
 						else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'on', element, name, value, { type: event.type, args: args } ); }
 
@@ -233,7 +232,7 @@
 							return false;
 						}
 						// 
-						else( result === true )
+						else if( result === true )
 						{
 							event.preventDefault( );
 
@@ -244,42 +243,40 @@
 			} );
 		},
 		
-		// Таймер прослушивания изменений объекта
+		// Timer 
 		_setCheckTimer: function( delay = 250 )
 		{
 			let context = this;
 			
-			// Таймер проверки значений
 			this.checkTimer = setInterval( function( )
 			{
 				for( let i in context.bindings )
 				{
-					// Изменяемая ссылка на текущий элемент
 					let item = context.bindings[ i ];
 					let element = $( item.element );
 					let targetKey = item.property;
 					let oldValue = item.value;
 					let value = '';
 
-					// Имя функции для установки значения
+					// Generate function name
 					let getFunctionName = 'get' + targetKey.charAt( 0 ).toUpperCase( ) + targetKey.substr( 1 );
 
-					// Проверка функции "get"
+					// Read value
 					if( typeof context.dataTarget[ getFunctionName ] === 'function' ) { value = context.dataTarget[ getFunctionName ]( ); }
 					else if( typeof context.dataTarget[ targetKey ] === 'function' ) { value = context.dataTarget[ targetKey ]( ); }
-					else if( context.dataTarget.hasOwnProperty( targetKey ) )	{ value = context.dataTarget[ targetKey ]; }
+					else if( context.dataTarget.hasOwnProperty( targetKey ) ) { value = context.dataTarget[ targetKey ]; }
 					
-					// Меняем значение элемента
+					// Only if value changed
 					if( value !== oldValue )
 					{
 						item.value = value;
 						
-						//
+						// Set value to element
 						if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) ) { $( element ).attr( 'checked', value ); }
 						else if( element.is( 'select' ) || element.is( 'input' ) || element.is( 'textarea' ) ) { $( element ).val( value ); }
 						else { $( element ).html( value ); }
 
-						//
+						// Callback
 						if( typeof context.callbacks.get === 'function' ) { context.callbacks.get( element, targetKey, value, { } ); }
 						else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'get', element, targetKey, value, { } ); }
 					}

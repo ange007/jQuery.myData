@@ -112,11 +112,11 @@
 				'time': getTime( ),
 				'text': '',
 				'check': false,
-				'test': function( msg ) { alert( 'Test alert: ' + msg ); }
+				'test': function( value, data ) { alert( 'Test alert: ' + value ); }
 			};
 
 			// Activate two-way binding
-			$( 'body' ).myData( data, function( type, element, propName, value )
+			$( 'body' ).myData( data, function( type, element, propName, value, data )
 			{
 				if( propName === 'text' ) { $( '#text-output' ).html( value ); }
 				else if( propName === 'check' ) { $( '#text-input' ).attr( 'disabled', !value ); }

@@ -24,17 +24,17 @@ $( /* parentElement */ ).myData( /* data and event object */, /* callback from a
 $( /* parentElement */ ).myData( /* options object */, /* callbacks object */ );
 ```
 ```javascript
-$( 'body' ).myData( object, function( type, element, propName, value ) { ... } );
+$( 'body' ).myData( object, function( type, element, propName, value, data ) { ... } );
 ```
 ```javascript
-$( 'body' ).myData( { event: eventObject, data: dataObject }, function( type, element, propName, value ) { ... } );
+$( 'body' ).myData( { event: eventObject, data: dataObject }, function( type, element, propName, value, data ) { ... } );
 ```
 ```javascript
 $( 'body' ).myData( data, {
-	main: function( type /* event type */, element, propName, value ) { ... }, // Main callback from all actions
-	set: function( element, propName, value ) { ... }, // Callback from SET action
-	get: function( element, propName, value ) { ... }, // Callback from GET action
-	on: function( element, propName, value ) { ... } // Callback from ON action
+	main: function( type /* event type */, element, propName, value, data ) { ... }, // Main callback from all actions
+	set: function( element, propName, value, data ) { ... }, // Callback from SET action
+	get: function( element, propName, value, data ) { ... }, // Callback from GET action
+	on: function( element, propName, value, data ) { ... } // Callback from ON action
 } );
 ```
 
@@ -53,10 +53,10 @@ $( 'body' ).myData( data, {
 	var data = { 
 		'time': getTime( ),
 		'check': false,
-		'test': function( msg ) { alert( 'Test alert: ' + msg ); }
+		'test': function( value, data ) { alert( 'Test alert: ' + value ); }
 	};
 
-	$( 'body' ).myData( data, function( type, element, propName, value )
+	$( 'body' ).myData( data, function( type, element, propName, value, data )
 	{
 		if( key === 'text' ) { $( '#text-output' ).html( value ); }
 		else if( key === 'check' ) { $( '#text-input' ).attr( 'disabled', !value ); }
