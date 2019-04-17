@@ -1,44 +1,64 @@
 language: node_js
 
 node_js:
-  - 4.4
-  
+	- 4.4
+	
 env:
-    global:
-        - GIT_NAME=ange007
-        - GIT_EMAIL=ange007@users.noreply.github.com
-        - GIT_DOMAIN=github.com
-        - REPO_URL=https://${OAuth}@${GIT_DOMAIN}/${TRAVIS_REPO_SLUG}.git
+		global:
+				- GIT_NAME=ange007
+				- GIT_EMAIL=ange007@users.noreply.github.com
+				- GIT_DOMAIN=github.com
+				- REPO_URL=https://${OAuth}@${GIT_DOMAIN}/${TRAVIS_REPO_SLUG}.git
 
 before_script:
-  - npm install -g gulp
+	- > 
+		if [[ "${TRAVIS_BRANCH}" == "master" ]]; then 
+			npm install -g gulp && gulp clean && gulp build && gulp build:min 
+		fi
 
 script: 
-  - gulp clean && gulp build && gulp build:min
-
-after_success: 
-  - git config --global user.name "${GIT_NAME}"
-  - git config --global user.email "${GIT_EMAIL}"
-  - chmod +x ${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh ### Need use: "git update-index --add --chmod=+x .travis-ghpages-commit.sh" in project directory
-  - chmod +x ${TRAVIS_BUILD_DIR}/.travis-release-commit.sh ### Need use: "git update-index --add --chmod=+x .travis-release-commit.sh" in project directory
-  - ${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh
-  - ${TRAVIS_BUILD_DIR}/.travis-release-commit.sh
+	- git config --global user.name "${GIT_NAME}"
+	- git config --global user.email "${GIT_EMAIL}"
+	- >
+		if [[ "${TRAVIS_BRANCH}" == "master" ]]; then 
+			chmod +x ${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh
+			${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh 
+		fi
+	- >
+		if [[ "${TRAVIS_BRANCH}" == "master" ]]; then 
+			chmod +x ${TRAVIS_BUILD_DIR}/.travis-release-commit.sh
+			${TRAVIS_BUILD_DIR}/.travis-release-commit.sh 
+		fi
+	- >
+		if [[ "${TRAVIS_BRANCH}" == "release" ]]; then 
+			cd ${TRAVIS_BUILD_DIR}
+		fi
 
 deploy:
-  provider: releases
-  api_key: $OAuth
-  file:
-    - ${TRAVIS_BUILD_DIR}/build/jquery.myData.js
-    - ${TRAVIS_BUILD_DIR}/build/jquery.myData.min.js
-  skip_cleanup: true
-  on:
-    repo: ange007/JQuery.myData
-    branch: master
-    tags: true
+	- provider: releases
+		api_key: $OAuth
+		file:
+			- ${TRAVIS_BUILD_DIR}/jquery.myData.js
+			- ${TRAVIS_BUILD_DIR}/jquery.myData.min.js
+		skip_cleanup: true
+		on:
+			repo: ange007/JQuery.myData
+			branch: release
+			tags: true
+
+	- provider: npm
+		email: ${EMAIL}
+		api_key: ${NPM_TOKEN}
+		skip_cleanup: true
+		tag: next
+		on:
+			branch: release
+			tags: true
+
 
 sudo: false
 dist: trusty
 
 cache:
-  directories:
-    - node_modules
+	directories:
+		- node_modules

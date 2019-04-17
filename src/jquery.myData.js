@@ -11,7 +11,7 @@
 ( function( $, window, document )
 {
 	'use strict';
-	
+
 	//
 	const pluginName = 'myData';
 	const isJQ = !!( window.jQuery );
@@ -26,10 +26,11 @@
 		//
 		this.element = $( element );
 		this.callbacks = { };
-		this.keys = { 
+		this.keys = {
 			'event': 'data-on',
 			'event-value': 'data-on-value',
 			'data': 'data-bind',
+			'data-element': 'data-bind-element',
 		};
 
 		// Event and Data target
@@ -45,6 +46,7 @@
 					'event': targetOrOptions[ 'data-keys' ][ 'event' ] || this.keys[ 'event' ],
 					'event-value': targetOrOptions[ 'data-keys' ][ 'event-value' ] || this.keys[ 'event-value' ],
 					'data': targetOrOptions[ 'data-keys' ][ 'data' ] || this.keys[ 'data' ],
+					'data-element': targetOrOptions[ 'data-keys' ][ 'data-element' ] || this.keys[ 'data-element' ],
 				};
 			}
 		}
@@ -77,7 +79,7 @@
 		bind: function( )
 		{
 			const context = this;
-			
+
 			// Формируем список проверяемых параметров
 			// @todo: Будет не верно работать в случае с динамически изменяемым содержимим элемента 
 			//		(так как считывание происходит только один раз)
@@ -85,33 +87,33 @@
 			{
 				let element = $( item ),
 					propName = element.attr( context.keys[ 'data' ] ) || '';
-				
+
 				if( propName === '' ) { return; }
 
 				// Add element to list
 				context.bindings.push( { element: item, property: propName, value: undefined } );
 			} );
-			
+
 			this._setEventListeners( );
 			this._setCheckTimer( );
 		},
-		
+
 		// Remove events
 		unbind: function( )
 		{
 			// Отключение проверки событий
 			this.element.off( '.' + pluginName, '[' + this.keys[ 'data' ] + ']' )
-						.off( '.' + pluginName, '[' + this.keys[ 'event' ] + ']' )
-						.off( '.' + pluginName, '[' + this.keys[ 'event-value' ] + ']' );
-						
+						.off( '.' + pluginName, '[' + this.keys[ 'data-element' ] + ']' )
+						.off( '.' + pluginName, '[' + this.keys[ 'event' ] + ']' );
+
 			// Clear timer
 			clearInterval( this.checkTimer );
-			
+
 			//
 			this.bindings = [ ];
 		},
-		
-		// Реакция на изменение состояния элемента
+
+		// Set events 
 		_setEventListeners: function( )
 		{
 			const context = this;
@@ -121,19 +123,21 @@
 								'mouseover', 'mousedown', 'mouseup', 'mousemove', 'mouseout', 'mouseenter', 'mouseleave',
 								'blur', 'focus', 'focusin', 'focusout' ].map( function( item ) { return item += '.' + pluginName; } );
 
-			// Реакция на смену состояния элемента
+			// Change state reaction
 			// data-bind="key" 
 			this.element.on( bindEvents.join( ' ' ), '[' + this.keys[ 'data' ] + ']', function( event )
 			{
-				let element = $( event.target );
-				let targetKey = element.attr( context.keys[ 'data' ] );
+				const element = $( event.target );
+				const targetKey = element.attr( context.keys[ 'data' ] );
+
+				//
 				let value = undefined;
 
 				// Заменяем значение в список
 				for( let i in context.bindings )
 				{
 					let item = context.bindings[ i ];
-					
+
 					if( item.element !== event.target || item.property !== targetKey ) { continue; }
 
 					// Read value
@@ -146,22 +150,43 @@
 					if( value !== item.value )
 					{
 						item.value = value;
-						
+
 						// Send value
 						if( typeof context.dataTarget[ setFunctionName ] === 'function' ) { context.dataTarget[ setFunctionName ].apply( context.dataTarget, [ value ] );	}
 						else if( typeof context.dataTarget[ targetKey ] === 'function' ) { context.dataTarget[ targetKey ].apply( context.dataTarget, [ value ] ); }
 						else if( context.dataTarget.hasOwnProperty( targetKey ) ) { context.dataTarget[ targetKey ] = value; }
-						
+
 						break;
 					}
 				}
-				
+
 				//
 				if( typeof context.callbacks.set === 'function' ) {	context.callbacks.set( element, targetKey, value, { } ); }
 				else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'set', element, targetKey, value, { } ); }
 			} );
-			
-			// Обработка установленных событий
+
+			// Element connection
+			// data-bind-element="enabled,text:#id"
+			// data-bind-element="[enabled:#id,text:input[name=qqq]]"
+			// data-bind-element="visible:.class"
+			this.element.on( bindEvents.join( ' ' ), '[' + this.keys[ 'data-element' ] + ']', function( event )
+			{
+				const element = $( event.target );
+				const actionData = element.attr( context.keys[ 'data-element' ] );
+
+				context._extractActions( event, actionData, function( action, selector )
+				{
+					const targetElement = $( selector );
+
+					// Read value
+					let value = context._readElementValue( element, undefined );
+
+					// Set value
+					context._setElementValue( targetElement, action, value );
+				} );
+			} );
+
+			// Action reaction
 			// data-on="focusin,focusout:action" 
 			// data-on="[click:action1,change:action2]"
 			// data-on="click:test( '!!!' )"
@@ -170,88 +195,66 @@
 				const element = $( this );
 				const actionData = element.attr( context.keys[ 'event' ] );
 
-				//
-				let actionList = [ ];
-
-				//
-				if( typeof actionData !== 'string' )
+				context._extractActions( event, actionData, function( eventType, handlerName )
 				{
-					console.error( 'jQuery.myData: Empty data in [' + context.keys[ 'event' ] + '].' );
-					return ;
-				}
-				else
-				{
-					actionList = ( actionData.indexOf( '[' ) === 0 ) ? ( actionData.match( /[\[\{}](.*?)[\}\]]/ )[ 1 ] || '' ).split( ',' ) : [ actionData ];
-				}
-
-				//
-				actionList.forEach( function( action, i, arr ) 
-				{
-					const onData = action.indexOf( ':' ) >= 0 ? action.split( ':' ) : [ 'click', action ];
-					const eventTypes = onData[ 0 ].trim( ).split( ',' );
-					const handlerName = onData[ 1 ].trim( );
 					const handlerFunc = handlerName.match( /([a-zA-Z0-9,\.\-_\/]+)(?:\(([^)]+)\))?$/ ) || false;
-					
-					// Если данной событие не указано в перечне - игнорируем
-					if( eventTypes.indexOf( event.type ) < 0 ) { return ; }
-					
-					// Вызов функции
-					if( handlerFunc )
+
+					// 
+					if( eventType != event.type || !handlerFunc ) { return ; }
+
+					const name = handlerFunc[ 1 ];
+					const args = ( typeof handlerFunc[ 2 ] === 'string' ) ? handlerFunc[ 2 ].split( ',' ).map( function( item ) { return ( item.trim( ).match( /^['"]{0,}(.*?)['"]{0,}$/ )[ 1 ] || '' ); } ) : [ ];
+					const targetFuncExist = ( context.eventTarget !== undefined && typeof context.eventTarget[ name ] === 'function' );
+					const windowFuncExist = ( typeof window[ name ] === 'function' );
+
+					// Read value
+					const value = context._readElementValue( element, undefined );
+
+					//
+					let callArgs = $.extend( [ ], args );
+					if( callArgs.length > 0 ) { callArgs.push( [ element, event, value ] ); }
+					else { callArgs = [ value, [ element, event, value ] ]; }
+
+					//
+					let result = undefined;
+
+					// Call function
+					if( targetFuncExist )
 					{
-						const name = handlerFunc[ 1 ];
-						const args = ( typeof handlerFunc[ 2 ] === 'string' ) ? handlerFunc[ 2 ].split( ',' ).map( function( item ) { return ( item.trim( ).match( /^['"]{0,}(.*?)['"]{0,}$/ )[ 1 ] || '' ); } ) : [ ];
-						const targetFuncExist = ( context.eventTarget !== undefined && typeof context.eventTarget[ name ] === 'function' );
-						const windowFuncExist = ( typeof window[ name ] === 'function' );
-						
-						// Read value
-						const value = context._readElementValue( element, undefined );
+						result = context.eventTarget[ name ].apply( context.eventTarget, callArgs );
+					}
+					else 
+					{
+						try { result = eval( name ).apply( window, callArgs ); } catch( err ) { console.warn( 'jQuery.myData: Could not call - "' + name + '"' ); }
+					}
 
-						//
-						let callArgs = $.extend( [ ], args );
-						if( callArgs.length > 0 ) { callArgs.push( [ element, event, value ] ); }
-						else { callArgs = [ value, [ element, event, value ] ]; }
+					// Callback
+					if( typeof context.callbacks.on === 'function' ) { context.callbacks.on( element, name, value, { type: event.type, args: args } ); }
+					else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'on', element, name, value, { type: event.type, args: args } ); }
 
-						//
-						let result = undefined;
+					//
+					if( result === false )
+					{
+						event.stopPropagation( );
 
-						// Call function
-						if( targetFuncExist ) 
-						{ 
-							result = context.eventTarget[ name ].apply( context.eventTarget, callArgs );
-						}
-						else 
-						{
-							try { result = eval( name ).apply( window, callArgs ); } catch( err ) { console.warn( 'jQuery.myData: Could not call - "' + name + '"' ); }
-						}
-						
-						// Callback
-						if( typeof context.callbacks.on === 'function' ) { context.callbacks.on( element, name, value, { type: event.type, args: args } ); }
-						else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'on', element, name, value, { type: event.type, args: args } ); }
+						return false;
+					}
+					//
+					else if( result === true )
+					{
+						event.preventDefault( );
 
-						//
-						if( result === false )
-						{
-							event.stopPropagation( );
-							
-							return false;
-						}
-						// 
-						else if( result === true )
-						{
-							event.preventDefault( );
-
-							return true;
-						}
+						return true;
 					}
 				} );
 			} );
 		},
-		
+
 		// Timer 
 		_setCheckTimer: function( delay = 250 )
 		{
 			let context = this;
-			
+
 			this.checkTimer = setInterval( function( )
 			{
 				for( let i in context.bindings )
@@ -269,12 +272,12 @@
 					if( typeof context.dataTarget[ getFunctionName ] === 'function' ) { value = context.dataTarget[ getFunctionName ]( ); }
 					else if( typeof context.dataTarget[ targetKey ] === 'function' ) { value = context.dataTarget[ targetKey ]( ); }
 					else if( context.dataTarget.hasOwnProperty( targetKey ) ) { value = context.dataTarget[ targetKey ]; }
-					
+
 					// Only if value changed
 					if( value !== oldValue )
 					{
 						item.value = value;
-						
+
 						// Set value to element
 						if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) ) { $( element ).attr( 'checked', value ); }
 						else if( element.is( 'select' ) || element.is( 'input' ) || element.is( 'textarea' ) ) { $( element ).val( value ); }
@@ -287,7 +290,7 @@
 				}
 			}, delay );
 		},
-		
+
 		// Read value
 		_readElementValue: function( element, oldValue )
 		{
@@ -316,58 +319,129 @@
 
 			// Если не удалось считать значение
 			if( value === '' || value === undefined ) { value = elementValue || $( element ).html( ); };
-			
+
 			return value;
 		},
-		
-		// Уничтожение плагина
+
+		// Set value
+		_setElementValue: function( element, event, value )
+		{
+			if( event === 'visible' || event === 'hidden' )
+			{
+				let state = ( event === 'visible', 'hidden', 'visible' );
+
+				if( ( typeof value === 'boolean' && value )
+					|| ( typeof value === 'string' && ( value === 'yes' || value === 'y' || value === 'true' ) )
+					|| ( typeof value === 'integer' && value >= 1 ) ) { state = event; }
+
+				element.css( 'visibility', state );
+			}
+			else if( event === 'enabled' || event === 'disabled' )
+			{
+
+				if( ( typeof value === 'boolean' && value === true )
+					|| ( typeof value === 'string' && ( value === 'yes' || value === 'y' ) )
+					|| ( typeof value === 'integer' && value >= 1 ) )
+				{
+					if( event === 'enabled' ) { element.removeAttr( 'disabled' ); }
+					else { element.attr( 'disabled', 'disabled' ); }
+				}
+				else
+				{
+					if( event === 'disabled' ) { element.removeAttr( 'disabled' ); }
+					else { element.attr( 'disabled', 'disabled' ); }
+				}
+			}
+			else
+			{
+				element.val( value );
+			}
+		},
+
+		//
+		// ="focusin,focusout:action" 
+		// ="[click:action1,change:action2]"
+		// ="click:test( '!!!' )"
+		_extractActions: function( event, actionData, callback )
+		{
+			//
+			let actionList = [ ];
+
+			//
+			if( typeof actionData !== 'string' )
+			{
+				console.error( 'jQuery.myData: Empty data in [' + context.keys[ 'event' ] + '].' );
+				return ;
+			}
+			else
+			{
+				actionList = ( actionData.indexOf( '[' ) === 0 ) ? ( actionData.match( /[\[\{}](.*?)[\}\]]/ )[ 1 ] || '' ).split( ',' ) : [ actionData ];
+			}
+
+			//
+			actionList.forEach( function( listItem, i, arr ) 
+			{
+				const onData = listItem.indexOf( ':' ) >= 0 ? listItem.split( ':' ) : [ 'change', listItem ];
+				const actions = onData[ 0 ].trim( ).split( ',' );
+				const value = onData[ 1 ].trim( );
+
+				// 
+				if( !value ) { return ; }
+
+				//
+				actions.forEach( function( action, i, arr )
+				{
+					callback( action, value );
+				} );
+			} );
+		},
+
+		// Destroy
 		destroy: function( )
 		{
 			this.unbind( );
 		}
 	};
 
-	// Прописываем плагин
+	// Plugin init
 	$.fn[ pluginName ] = function( params, callback )
 	{
 		const args = arguments;
 
-		// Если параметры это объект
+		// Object
 		if( params === undefined || typeof params === 'object' )
 		{
-			// Проходим по компонентам
 			this.each( function( )
 			{
 				const instance = isJQ ? $( this ).data( '_' + pluginName ) : $( this )[ 0 ][ '_' + pluginName ];
 				const id = ( typeof params === 'object' && params.hasOwnProperty( 'exlusive' ) ) ? '' : Math.random( ).toString( 36 ).substring( 7 );
-				
+
 				if( !instance || id !== '' )
 				{
 					let plugin = new Plugin( this, params, callback );
-					
+
 					if( isJQ ) { $( this ).data( '_' + pluginName, plugin ); }
 					else { $( this )[ 0 ][ '_' + pluginName ] = plugin;	}
 				}
 			} );
-					
+
 			return $( this );
 		}
-		// Если параметры это строка
+		// String
 		else if( typeof params === 'string' && params[0] !== '_' && params !== 'init' )
 		{
 			let returns = undefined;
-			
-			//
+
 			this.each( function( )
 			{
 				const instance = isJQ ? $( this ).data( '_' + pluginName ) : $( this )[ 0 ][ '_' + pluginName ];
-				
+
 				if( instance instanceof Plugin && typeof instance[ params ] === 'function' )
 				{
 					returns = instance[ params ].apply( instance, Array.prototype.slice.call( args, 1 ) );
 				}
 			} );
-			
+
 			return returns !== undefined ? returns : $( this );
 		}
 	};
