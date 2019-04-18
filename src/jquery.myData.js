@@ -117,7 +117,7 @@
 		_setEventListeners: function( )
 		{
 			const context = this;
-			const bindEvents = [ 'change', 'keydown', 'input', 'paste' ].map( function( item ) { return item += '.' + pluginName; } );
+			const bindEvents = [ 'change', 'keyup', 'input', 'paste' ].map( function( item ) { return item += '.' + pluginName; } );
 			const onEvents = [ 'click', 'dblclick', 'change', 'input', 'paste', 'load', 'unload', 'select', 
 								'resize', 'scroll', 'submit', 'error', 'keydown', 'keyup', 'keypress', 
 								'mouseover', 'mousedown', 'mouseup', 'mousemove', 'mouseout', 'mouseenter', 'mouseleave',
@@ -187,7 +187,7 @@
 			} );
 
 			// Action reaction
-			// data-on="focusin,focusout:action" 
+			// data-on="focusin,focusout:action"
 			// data-on="[click:action1,change:action2]"
 			// data-on="click:test( '!!!' )"
 			this.element.on( onEvents.join( ' ' ), '[' + this.keys[ 'event' ] + ']', function( event )
@@ -199,9 +199,10 @@
 				{
 					const handlerFunc = handlerName.match( /([a-zA-Z0-9,\.\-_\/]+)(?:\(([^)]+)\))?$/ ) || false;
 
-					// 
+					//
 					if( eventType != event.type || !handlerFunc ) { return ; }
 
+					//
 					const name = handlerFunc[ 1 ];
 					const args = ( typeof handlerFunc[ 2 ] === 'string' ) ? handlerFunc[ 2 ].split( ',' ).map( function( item ) { return ( item.trim( ).match( /^['"]{0,}(.*?)['"]{0,}$/ )[ 1 ] || '' ); } ) : [ ];
 					const targetFuncExist = ( context.eventTarget !== undefined && typeof context.eventTarget[ name ] === 'function' );
@@ -223,7 +224,7 @@
 					{
 						result = context.eventTarget[ name ].apply( context.eventTarget, callArgs );
 					}
-					else 
+					else
 					{
 						try { result = eval( name ).apply( window, callArgs ); } catch( err ) { console.warn( 'jQuery.myData: Could not call - "' + name + '"' ); }
 					}
@@ -244,7 +245,7 @@
 					{
 						event.preventDefault( );
 
-						return true;
+						return result;
 					}
 				} );
 			} );
@@ -274,19 +275,17 @@
 					else if( context.dataTarget.hasOwnProperty( targetKey ) ) { value = context.dataTarget[ targetKey ]; }
 
 					// Only if value changed
-					if( value !== oldValue )
-					{
-						item.value = value;
+					if( value === oldValue ) { continue; }
+					item.value = value;
 
-						// Set value to element
-						if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) ) { $( element ).attr( 'checked', value ); }
-						else if( element.is( 'select' ) || element.is( 'input' ) || element.is( 'textarea' ) ) { $( element ).val( value ); }
-						else { $( element ).html( value ); }
+					// Set value to element
+					if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) ) { $( element ).attr( 'checked', value ); }
+					else if( element.is( 'select' ) || element.is( 'input' ) || element.is( 'textarea' ) ) { $( element ).val( value ); }
+					else { $( element ).html( value ); }
 
-						// Callback
-						if( typeof context.callbacks.get === 'function' ) { context.callbacks.get( element, targetKey, value, { } ); }
-						else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'get', element, targetKey, value, { } ); }
-					}
+					// Callback
+					if( typeof context.callbacks.get === 'function' ) { context.callbacks.get( element, targetKey, value, { } ); }
+					else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'get', element, targetKey, value, { } ); }
 				}
 			}, delay );
 		},
@@ -328,7 +327,7 @@
 		{
 			if( event === 'visible' || event === 'hidden' )
 			{
-				let state = ( event === 'visible', 'hidden', 'visible' );
+				let state = ( event === 'visible' ? 'hidden' : 'visible' );
 
 				if( ( typeof value === 'boolean' && value )
 					|| ( typeof value === 'string' && ( value === 'yes' || value === 'y' || value === 'true' ) )
@@ -354,7 +353,8 @@
 			}
 			else
 			{
-				element.val( value );
+				if( element.is( 'input' ) || element.is( 'textarea' ) ) { element.val( value ); }
+				else { element.text( value ); }
 			}
 		},
 

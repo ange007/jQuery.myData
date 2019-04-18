@@ -49,8 +49,10 @@
 
 			<br />
 			<div class="panel">
-				<label><b>Activated "input:text":</b></label>
-				<input type="checkbox" data-bind="check"/>
+				<label>
+					<b>Activated "input:text":</b>
+					<input type="checkbox" data-bind="check"/>
+				</label>
 			</div>
 
 			<br />
@@ -61,11 +63,10 @@
 
 			<h3>data-bind-element</h3>
 
-			<br />
 			<div class="panel">
 				<label>
 					<b>Activated "input:text":</b>
-					<input type="checkbox" data-bind-element="enabled:#text-element-input"/>
+					<input type="checkbox" data-bind-element="[enabled:#text-element-input,visible:#text-element-block]"/>
 				</label>
 			</div>
 
@@ -75,7 +76,7 @@
 					<b>Text input test:</b>
 					<input id="text-element-input" type="text" data-bind-element="text:#text-element-output" disabled/>
 				</label>
-				<div>You write: "<span id="text-element-output">*</span>"</div>
+				<div id="text-element-block" style="visibility: hidden;">You write: "<span id="text-element-output">*</span>"</div>
 			</div>
 
 			<h3>data-on</h3>

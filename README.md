@@ -1,10 +1,10 @@
-# JQuery.MyData
+# jQuery.MyData
 [![Latest Stable Version](https://poser.pugx.org/ange007/jquery-mydata/v/stable)](https://packagist.org/packages/ange007/jquery-mydata)
 [![Total Downloads](https://poser.pugx.org/ange007/jquery-mydata/downloads)](https://packagist.org/packages/ange007/jquery-mydata)
 [![License](https://poser.pugx.org/ange007/jquery-mydata/license)](https://packagist.org/packages/ange007/jquery-mydata)
-[![Build Status](https://travis-ci.org/ange007/JQuery.myData.svg?branch=master)](https://travis-ci.org/ange007/JQuery.myData)
+[![Build Status](https://travis-ci.org/ange007/jQuery.myData.svg?branch=master)](https://travis-ci.org/ange007/JQuery.myData)
 
-Small JQuery&amp;Zepto plugin for two-ways data binding.
+Small jQuery&amp;Zepto plugin for two-ways data binding.
 
 ## Install
 Composer:
