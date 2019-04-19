@@ -174,7 +174,7 @@
 				const element = $( event.target );
 				const actionData = element.attr( context.keys[ 'data-element' ] );
 
-				context._extractActions( event, actionData, function( action, selector )
+				context._extractActions( element, event, actionData, function( action, selector )
 				{
 					const targetElement = $( selector );
 
@@ -195,7 +195,7 @@
 				const element = $( this );
 				const actionData = element.attr( context.keys[ 'event' ] );
 
-				context._extractActions( event, actionData, function( eventType, handlerName )
+				context._extractActions( element, event, actionData, function( eventType, handlerName )
 				{
 					const handlerFunc = handlerName.match( /([a-zA-Z0-9,\.\-_\/]+)(?:\(([^)]+)\))?$/ ) || false;
 
@@ -362,8 +362,10 @@
 		// ="focusin,focusout:action" 
 		// ="[click:action1,change:action2]"
 		// ="click:test( '!!!' )"
-		_extractActions: function( event, actionData, callback )
+		_extractActions: function( element, event, actionData, callback )
 		{
+			const defaultEvent = ( element.is( 'input, select, textarea' ) ? 'change' : 'click' );
+
 			//
 			let actionList = [ ];
 
@@ -381,7 +383,7 @@
 			//
 			actionList.forEach( function( listItem, i, arr ) 
 			{
-				const onData = listItem.indexOf( ':' ) >= 0 ? listItem.split( ':' ) : [ 'change', listItem ];
+				const onData = listItem.indexOf( ':' ) >= 0 ? listItem.split( ':' ) : [ defaultEvent, listItem ];
 				const actions = onData[ 0 ].trim( ).split( ',' );
 				const value = onData[ 1 ].trim( );
 

@@ -1,4 +1,6 @@
 # CHANGELOG
+## v0.4.1:
+* Set default event target for ```[ input, select, textarea ]``` - ```change``` and for other ```click```.
 ## v0.4.0:
 * Add ```data-bind-element``` for change data in target element.
 ## v0.3.0:

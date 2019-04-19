@@ -1,7 +1,7 @@
 'use strict';
 
 /* * * * * * * * * * * * * *
- *  Подключениемые модули 
+ *  Подключениемые модули
  * * * * * * * * * * * * * */
 
 var gulp = require( 'gulp' ),
@@ -16,17 +16,17 @@ var gulp = require( 'gulp' ),
 	babel = require( 'gulp-babel' );
 
 /* * * * * * * * * * * * * *
- * Переменные / Функции 
+ * Переменные / Функции
  * * * * * * * * * * * * * */
 
 // Основные параметры плагина
-var params = 
+var params =
 {
 	fileName: 'jquery.myData'
 };
 
 // Пути
-var paths = 
+var paths =
 {
 	src: './src/',
 	build: './build/'
@@ -39,7 +39,7 @@ var bundles =
 		fileSuffix: '',
 		compress: false
 	},
-	
+
 	min: {
 		fileSuffix: '.min',
 		compress: true
@@ -50,19 +50,19 @@ var bundles =
 var bundle = bundles[ 'dev' ];
 
 /* * * * * * * * * * * * * *
- * Задачи 
+ * Задачи
  * * * * * * * * * * * * * */
 
 // Очищаем директорию сборки
 gulp.task( 'clean', function( )
-{  
-    return rimraf.sync( paths.build + '/**' );
+{
+	return rimraf.sync( paths.build + '/**' );
 } );
 
 // Синхронизация изменений конфигураций для bower и сomposer
 gulp.task( 'config:sync', function( )
 {
-	var options = 
+	var options =
 	{
 		fields: [
 			'version',
@@ -73,7 +73,7 @@ gulp.task( 'config:sync', function( )
 		],
 		space: '  '
 	};
-	
+
 	//
 	gulp.src( [ 'bower.json', 'composer.json' ] )
 		.pipe( sync( options ) ) // Синхронизируем данные
@@ -81,11 +81,11 @@ gulp.task( 'config:sync', function( )
 } );
 
 // Задача обработки скриптов библиотеки
-gulp.task( 'js:build', function( ) 
+gulp.task( 'js:build', function( )
 {
 	// Основные параметры
 	var fileName = params.fileName + bundle.fileSuffix + '.js';
-	
+
 	// Формируем заголовок для файла
 	var pkg = require( './package.json' ),
 		banner = [ '/**',
@@ -97,9 +97,9 @@ gulp.task( 'js:build', function( )
 					' */',
 					'',
 					'' ].join( '\n' );
-	
+
 	// Собираем файл
-    return gulp.src( paths.src + '/**/*.js' )
+	return gulp.src( paths.src + '/**/*.js' )
 				.pipe( debug( { title: 'js:' } ) ) // Вывод пофайлового лога
 				.pipe( babel( {	presets: [ 'es2015' ] } ) )
 				.pipe( gulpif( bundle.compress, uglify( { mangle: true, compress: false } ) ) ) //
@@ -109,22 +109,22 @@ gulp.task( 'js:build', function( )
 } );
 
 // Задача по сборке обычной версии
-gulp.task( 'build', function( ) 
+gulp.task( 'build', function( )
 {
 	bundle = bundles[ 'dev' ];
-	gulp.start( 'js:build' ); 
+	gulp.start( 'js:build' );
 } );
 
 // Задача по сборке сжатой версии
-gulp.task( 'build:min', function( ) 
+gulp.task( 'build:min', function( )
 {
 	bundle = bundles[ 'min' ];
-	gulp.start( 'js:build' ); 
+	gulp.start( 'js:build' );
 } );
 
 // Задача по умолчанию
-gulp.task( 'default', function( ) 
-{  
+gulp.task( 'default', function( )
+{
 	// Запускаем основные задания
 	gulp.start( 'clean', 'build', 'build:min' );
 
