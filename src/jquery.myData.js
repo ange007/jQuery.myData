@@ -297,7 +297,7 @@
 			let elementValue = $( element ).attr( 'value' );
 			let customValue = $( element ).attr( this.keys[ 'event-value' ] );
 
-			// data-on-value 
+			// data-on-value
 			if( customValue !== undefined && customValue !== '' ) { value = customValue; }
 			// input:checkbox
 			else if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) )
@@ -306,8 +306,8 @@
 				else { value = $( element ).is( ':checked' ); }
 			}
 			// select
-			else if( element.is( 'select' ) ) 
-			{ 
+			else if( element.is( 'select' ) )
+			{
 				if( typeof oldValue === 'number' ) { value = $( element ).find( ':selected' ).index( );  }
 				else { value = $( element ).val( ); }
 			}
@@ -315,6 +315,12 @@
 			else if( element.is( 'input' ) || element.is( 'textarea' ) ) { value = $( element ).val( ); }
 			// link
 			else if( element.is( 'a' ) ) { value = $( element ).attr( 'href' ); }
+			// form
+			else if( element.is( 'form' ) )
+			{
+				let value = { };
+				$( element ).serializeArray( ).forEach( function( x ) { value[ x.name ] = x.value; } );
+			}
 
 			// Если не удалось считать значение
 			if( value === '' || value === undefined ) { value = elementValue || $( element ).html( ); };
@@ -364,7 +370,9 @@
 		// ="click:test( '!!!' )"
 		_extractActions: function( element, event, actionData, callback )
 		{
-			const defaultEvent = ( element.is( 'input, select, textarea' ) ? 'change' : 'click' );
+			if( element.is( 'form' ) ) { defaultEvent = 'submit'; }
+			else if( element.is( 'input, select, textarea' ) ) { defaultEvent = 'change'; }
+			else { defaultEvent = 'click'; }
 
 			//
 			let actionList = [ ];
