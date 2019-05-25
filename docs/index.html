@@ -4,11 +4,11 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>JQuery.myData - DEMO</title>
-		
+
 		<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
 		<script src="../build/jquery.myData.js"></script>
-		
-        <style>
+
+		<style>
 			body {
 				background-color: rgb(66, 134, 244);
 				font-family: "-apple-system",BlinkMacSystemFont,Arial,sans-serif;
@@ -16,10 +16,10 @@
 				color: #222;
 				line-height: 18px;
 			}
-            .container {
-                margin: 0 auto;
+			.container {
+				margin: 0 auto;
 				width: 400px;
-            }
+			}
 			.panel {
 				width: 100%;
 				padding: 10px;
@@ -35,63 +35,94 @@
 				background: #F6F6F6;
 				color: #EA0000;
 			}
-        </style>
+		</style>
 	</head>
 
 	<body>
 		<div class="container">
-			<h3>data-bind</h3>
-			
-			<div class="panel">
-				<label><b>Actual time:</b></label>
-				<span data-bind="time"></span>
-			</div>
+			<form action="#" id="form" data-on="submit:submit">
+				<h3>data-bind</h3>
 
-			<br />
-			<div class="panel">
-				<label><b>Activated "input:text":</b></label>
-				<input type="checkbox" data-bind="check"/>
-			</div>	
+				<div class="panel">
+					<label><b>Actual time:</b></label>
+					<span data-bind="time"></span>
+				</div>
 
-			<br />
-			<div class="panel">
-				<label><b>Text input test:</b></label> <input id="text-input" type="text" data-bind="text"/>
-				<div>You write: "<span id="text-output">*</span>"</div>
-			</div>
+				<br />
+				<div class="panel">
+					<label>
+						<b>Activated "input:text":</b>
+						<input type="checkbox" name="data-bind-input-activate" value="y" data-bind="check"/>
+					</label>
+				</div>
 
-			<h3>data-on</h3>
-			
-			<div class="panel">
-				<code>data-on="click:test"</code>
-				<br /><br />
-				<label><b>Show state from "data-on":</b>
-				<input type="checkbox" data-on="click:test"/></label> 
-			</div>
-			
-			<br />
-			<div class="panel">
-				<code>data-on="click:test( 'message' )"</code>
-				<br /><br />
-				<a href="#" class="button" data-on="click:test( 'message' )">Test</a>
-			</div>
+				<br />
+				<div class="panel">
+					<label><b>Text input test:</b></label> <input id="text-input" name="data-bind-input-text" type="text" data-bind="text"/>
+					<div>You write: "<span id="text-output">*</span>"</div>
+				</div>
 
-			<br />
-			<div class="panel">
-				<code>data-on="console.warn( 'click' )"</code>
-				<br /><br />
-				<label><b>Show state from "data-on":</b>
-				<input type="checkbox" data-on="console.warn( 'click' )"/></label> 
-			</div>
+				<h3>data-bind-element</h3>
 
-			<br />
-			<div class="panel">
-				<code>data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"</code>
-				<br /><br />
-				<label><b>Show state from "data-on":</b>
-				<input type="checkbox" data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"/></label> 
-			</div>
+				<div class="panel">
+					<label>
+						<b>Activated "input:text":</b>
+						<input type="checkbox" name="data-bind-element-input-activate" value="y" data-bind-element="[enabled:#text-element-input,visible:#text-element-block]"/>
+					</label>
+				</div>
+
+				<br />
+				<div class="panel">
+					<label>
+						<b>Text input test:</b>
+						<input id="text-element-input" type="text" name="data-bind-element-input-text" data-bind-element="text:#text-element-output" disabled/>
+					</label>
+					<div id="text-element-block" style="visibility: hidden;">You write: "<span id="text-element-output">*</span>"</div>
+				</div>
+
+				<h3>data-on</h3>
+
+				<div class="panel">
+					<code>data-on="click:test"</code>
+					<br /><br />
+					<label>
+						<b>Show state from "data-on":</b>
+						<input type="checkbox" name="data-on-show-state-1" value="y" data-on="click:test"/>
+					</label>
+				</div>
+
+				<br />
+				<div class="panel">
+					<code>data-on="click:test( 'message' )"</code>
+					<br /><br />
+					<a href="#" class="button" data-on="click:test( 'message' )">Test</a>
+				</div>
+
+				<br />
+				<div class="panel">
+					<code>data-on="console.warn( 'click' )"</code>
+					<br /><br />
+					<label><b>Show state from "data-on":</b>
+					<input type="checkbox" name="data-on-show-state-2" value="y" data-on="console.warn( 'click' )"/></label>
+				</div>
+
+				<br />
+				<div class="panel">
+					<code>data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"</code>
+					<br /><br />
+					<label><b>Show state from "data-on":</b>
+					<input type="checkbox" name="data-on-show-state-3" value="y" data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"/></label>
+				</div>
+
+				<br />
+				<div class="panel">
+					<code>form data-on="submit:submit"</code>
+					<br /><br />
+					<input type="submit" value="Submit"/>
+				</div>
+			</form>
 		</div>
-		
+
 		<script>
 			// Time formating
 			function n( n )
@@ -103,20 +134,21 @@
 			function getTime( )
 			{
 				const time = new Date( );
-				
+
 				return n( time.getHours( ) ) + ':' + n( time.getMinutes( ) ) + ':' + n( time.getSeconds( ) );
 			}
 
 			// Uses data
-			var data = { 
+			var data = {
 				'time': getTime( ),
 				'text': '',
 				'check': false,
-				'test': function( msg ) { alert( 'Test alert: ' + msg ); }
+				'test': function( value, elementData ) { alert( 'Test alert: ' + value ); },
+				'submit': function( value, elementData ) { debugger; alert( JSON.stringify( value ) ); }
 			};
 
 			// Activate two-way binding
-			$( 'body' ).myData( data, function( type, element, propName, value )
+			$( 'body' ).myData( data, function( type, element, propName, value, data )
 			{
 				if( propName === 'text' ) { $( '#text-output' ).html( value ); }
 				else if( propName === 'check' ) { $( '#text-input' ).attr( 'disabled', !value ); }

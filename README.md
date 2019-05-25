@@ -1,10 +1,10 @@
-# JQuery.MyData
+# jQuery.MyData
 [![Latest Stable Version](https://poser.pugx.org/ange007/jquery-mydata/v/stable)](https://packagist.org/packages/ange007/jquery-mydata)
 [![Total Downloads](https://poser.pugx.org/ange007/jquery-mydata/downloads)](https://packagist.org/packages/ange007/jquery-mydata)
 [![License](https://poser.pugx.org/ange007/jquery-mydata/license)](https://packagist.org/packages/ange007/jquery-mydata)
-[![Build Status](https://travis-ci.org/ange007/JQuery.myData.svg?branch=master)](https://travis-ci.org/ange007/JQuery.myData)
+[![Build Status](https://travis-ci.org/ange007/jQuery.myData.svg?branch=master)](https://travis-ci.org/ange007/JQuery.myData)
 
-Small JQuery&amp;Zepto plugin for two-ways data binding.
+Small jQuery&amp;Zepto plugin for two-ways data binding.
 
 ## Install
 Composer:
@@ -24,17 +24,17 @@ $( /* parentElement */ ).myData( /* data and event object */, /* callback from a
 $( /* parentElement */ ).myData( /* options object */, /* callbacks object */ );
 ```
 ```javascript
-$( 'body' ).myData( object, function( type, element, propName, value ) { ... } );
+$( 'body' ).myData( object, function( type, element, propName, value, data ) { ... } );
 ```
 ```javascript
-$( 'body' ).myData( { event: eventObject, data: dataObject }, function( type, element, propName, value ) { ... } );
+$( 'body' ).myData( { event: eventObject, data: dataObject }, function( type, element, propName, value, data ) { ... } );
 ```
 ```javascript
 $( 'body' ).myData( data, {
-	main: function( type /* event type */, element, propName, value ) { ... }, // Main callback from all actions
-	set: function( element, propName, value ) { ... }, // Callback from SET action
-	get: function( element, propName, value ) { ... }, // Callback from GET action
-	on: function( element, propName, value ) { ... } // Callback from ON action
+	main: function( type /* event type */, element, propName, value, data ) { ... }, // Main callback from all actions
+	set: function( element, propName, value, data /* [ eventType ] */ ) { ... }, // Callback from SET action
+	get: function( element, propName, value, data /* [ ] */ ) { ... }, // Callback from GET action
+	on: function( element, propName, value, data /* [ eventType, callArgs ] */ ) { ... } // Callback from ON action
 } );
 ```
 
@@ -53,10 +53,10 @@ $( 'body' ).myData( data, {
 	var data = { 
 		'time': getTime( ),
 		'check': false,
-		'test': function( msg ) { alert( 'Test alert: ' + msg ); }
+		'test': function( value, elementData /* [ element, elementEvent, elementValue ] */ ) { alert( 'Test alert: ' + value ); }
 	};
 
-	$( 'body' ).myData( data, function( type, element, propName, value )
+	$( 'body' ).myData( data, function( type, element, propName, value, data )
 	{
 		if( key === 'text' ) { $( '#text-output' ).html( value ); }
 		else if( key === 'check' ) { $( '#text-input' ).attr( 'disabled', !value ); }
