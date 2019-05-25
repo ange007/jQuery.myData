@@ -40,78 +40,87 @@
 
 	<body>
 		<div class="container">
-			<h3>data-bind</h3>
+			<form action="#" id="form" data-on="submit:submit">
+				<h3>data-bind</h3>
 
-			<div class="panel">
-				<label><b>Actual time:</b></label>
-				<span data-bind="time"></span>
-			</div>
+				<div class="panel">
+					<label><b>Actual time:</b></label>
+					<span data-bind="time"></span>
+				</div>
 
-			<br />
-			<div class="panel">
-				<label>
-					<b>Activated "input:text":</b>
-					<input type="checkbox" data-bind="check"/>
-				</label>
-			</div>
+				<br />
+				<div class="panel">
+					<label>
+						<b>Activated "input:text":</b>
+						<input type="checkbox" name="data-bind-input-activate" value="y" data-bind="check"/>
+					</label>
+				</div>
 
-			<br />
-			<div class="panel">
-				<label><b>Text input test:</b></label> <input id="text-input" type="text" data-bind="text"/>
-				<div>You write: "<span id="text-output">*</span>"</div>
-			</div>
+				<br />
+				<div class="panel">
+					<label><b>Text input test:</b></label> <input id="text-input" name="data-bind-input-text" type="text" data-bind="text"/>
+					<div>You write: "<span id="text-output">*</span>"</div>
+				</div>
 
-			<h3>data-bind-element</h3>
+				<h3>data-bind-element</h3>
 
-			<div class="panel">
-				<label>
-					<b>Activated "input:text":</b>
-					<input type="checkbox" data-bind-element="[enabled:#text-element-input,visible:#text-element-block]"/>
-				</label>
-			</div>
+				<div class="panel">
+					<label>
+						<b>Activated "input:text":</b>
+						<input type="checkbox" name="data-bind-element-input-activate" value="y" data-bind-element="[enabled:#text-element-input,visible:#text-element-block]"/>
+					</label>
+				</div>
 
-			<br />
-			<div class="panel">
-				<label>
-					<b>Text input test:</b>
-					<input id="text-element-input" type="text" data-bind-element="text:#text-element-output" disabled/>
-				</label>
-				<div id="text-element-block" style="visibility: hidden;">You write: "<span id="text-element-output">*</span>"</div>
-			</div>
+				<br />
+				<div class="panel">
+					<label>
+						<b>Text input test:</b>
+						<input id="text-element-input" type="text" name="data-bind-element-input-text" data-bind-element="text:#text-element-output" disabled/>
+					</label>
+					<div id="text-element-block" style="visibility: hidden;">You write: "<span id="text-element-output">*</span>"</div>
+				</div>
 
-			<h3>data-on</h3>
+				<h3>data-on</h3>
 
-			<div class="panel">
-				<code>data-on="click:test"</code>
-				<br /><br />
-				<label>
-					<b>Show state from "data-on":</b>
-					<input type="checkbox" data-on="click:test"/>
-				</label>
-			</div>
+				<div class="panel">
+					<code>data-on="click:test"</code>
+					<br /><br />
+					<label>
+						<b>Show state from "data-on":</b>
+						<input type="checkbox" name="data-on-show-state-1" value="y" data-on="click:test"/>
+					</label>
+				</div>
 
-			<br />
-			<div class="panel">
-				<code>data-on="click:test( 'message' )"</code>
-				<br /><br />
-				<a href="#" class="button" data-on="click:test( 'message' )">Test</a>
-			</div>
+				<br />
+				<div class="panel">
+					<code>data-on="click:test( 'message' )"</code>
+					<br /><br />
+					<a href="#" class="button" data-on="click:test( 'message' )">Test</a>
+				</div>
 
-			<br />
-			<div class="panel">
-				<code>data-on="console.warn( 'click' )"</code>
-				<br /><br />
-				<label><b>Show state from "data-on":</b>
-				<input type="checkbox" data-on="console.warn( 'click' )"/></label>
-			</div>
+				<br />
+				<div class="panel">
+					<code>data-on="console.warn( 'click' )"</code>
+					<br /><br />
+					<label><b>Show state from "data-on":</b>
+					<input type="checkbox" name="data-on-show-state-2" value="y" data-on="console.warn( 'click' )"/></label>
+				</div>
 
-			<br />
-			<div class="panel">
-				<code>data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"</code>
-				<br /><br />
-				<label><b>Show state from "data-on":</b>
-				<input type="checkbox" data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"/></label>
-			</div>
+				<br />
+				<div class="panel">
+					<code>data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"</code>
+					<br /><br />
+					<label><b>Show state from "data-on":</b>
+					<input type="checkbox" name="data-on-show-state-3" value="y" data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"/></label>
+				</div>
+
+				<br />
+				<div class="panel">
+					<code>form data-on="submit:submit"</code>
+					<br /><br />
+					<input type="submit" value="Submit"/>
+				</div>
+			</form>
 		</div>
 
 		<script>
@@ -134,7 +143,8 @@
 				'time': getTime( ),
 				'text': '',
 				'check': false,
-				'test': function( value, data ) { alert( 'Test alert: ' + value ); }
+				'test': function( value, elementData ) { alert( 'Test alert: ' + value ); },
+				'submit': function( value, elementData ) { debugger; alert( JSON.stringify( value ) ); }
 			};
 
 			// Activate two-way binding

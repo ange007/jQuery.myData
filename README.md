@@ -32,9 +32,9 @@ $( 'body' ).myData( { event: eventObject, data: dataObject }, function( type, el
 ```javascript
 $( 'body' ).myData( data, {
 	main: function( type /* event type */, element, propName, value, data ) { ... }, // Main callback from all actions
-	set: function( element, propName, value, data ) { ... }, // Callback from SET action
-	get: function( element, propName, value, data ) { ... }, // Callback from GET action
-	on: function( element, propName, value, data ) { ... } // Callback from ON action
+	set: function( element, propName, value, data /* [ eventType ] */ ) { ... }, // Callback from SET action
+	get: function( element, propName, value, data /* [ ] */ ) { ... }, // Callback from GET action
+	on: function( element, propName, value, data /* [ eventType, callArgs ] */ ) { ... } // Callback from ON action
 } );
 ```
 
@@ -53,7 +53,7 @@ $( 'body' ).myData( data, {
 	var data = { 
 		'time': getTime( ),
 		'check': false,
-		'test': function( value, data ) { alert( 'Test alert: ' + value ); }
+		'test': function( value, elementData /* [ element, elementEvent, elementValue ] */ ) { alert( 'Test alert: ' + value ); }
 	};
 
 	$( 'body' ).myData( data, function( type, element, propName, value, data )

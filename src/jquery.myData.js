@@ -161,8 +161,8 @@
 				}
 
 				//
-				if( typeof context.callbacks.set === 'function' ) {	context.callbacks.set( element, targetKey, value, { } ); }
-				else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'set', element, targetKey, value, { } ); }
+				if( typeof context.callbacks.set === 'function' ) {	context.callbacks.set( element, targetKey, value, { type: event.type } ); }
+				else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'set', element, targetKey, value, { type: event.type } ); }
 			} );
 
 			// Element connection
@@ -294,6 +294,7 @@
 		_readElementValue: function( element, oldValue )
 		{
 			let value = undefined;
+
 			let elementValue = $( element ).attr( 'value' );
 			let customValue = $( element ).attr( this.keys[ 'event-value' ] );
 
@@ -318,8 +319,8 @@
 			// form
 			else if( element.is( 'form' ) )
 			{
-				let value = { };
-				$( element ).serializeArray( ).forEach( function( x ) { value[ x.name ] = x.value; } );
+				value = { };
+				$( element[0] ).serializeArray( ).forEach( function( x ) { value[ x.name ] = x.value; } );
 			}
 
 			// Если не удалось считать значение
@@ -370,9 +371,9 @@
 		// ="click:test( '!!!' )"
 		_extractActions: function( element, event, actionData, callback )
 		{
+			let defaultEvent = 'click';
 			if( element.is( 'form' ) ) { defaultEvent = 'submit'; }
 			else if( element.is( 'input, select, textarea' ) ) { defaultEvent = 'change'; }
-			else { defaultEvent = 'click'; }
 
 			//
 			let actionList = [ ];

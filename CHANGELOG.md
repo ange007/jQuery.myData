@@ -1,4 +1,6 @@
 # CHANGELOG
+## v0.4.2:
+* Fix get values from ```form:submit``` event.
 ## v0.4.1:
 * Set default event target for ```[ input, select, textarea ]``` - ```change``` and for other ```click```.
 ## v0.4.0:

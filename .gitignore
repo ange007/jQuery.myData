@@ -3,6 +3,7 @@ nbproject
 build
 dist
 .vscode
+.history
 bower_components
 npm-debug.log
 TODO.txt
