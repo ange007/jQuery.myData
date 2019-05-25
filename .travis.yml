@@ -32,16 +32,16 @@ script:
       cd ${TRAVIS_BUILD_DIR}
     fi
 deploy:
-	- provider: releases
-		api_key: $OAuth
-		file:
-			- ${TRAVIS_BUILD_DIR}/jquery.myData.js
-			- ${TRAVIS_BUILD_DIR}/jquery.myData.min.js
-		skip_cleanup: true
-		on:
-			repo: ange007/JQuery.myData
-			branch: release
-			tags: true
+  - provider: releases
+    api_key: $OAuth
+    file:
+      - ${TRAVIS_BUILD_DIR}/jquery.myData.js
+      - ${TRAVIS_BUILD_DIR}/jquery.myData.min.js
+    skip_cleanup: true
+    on:
+      repo: ange007/JQuery.myData
+      branch: release
+      tags: true
       
   - provider: npm
     email: ${EMAIL}
