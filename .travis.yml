@@ -1,39 +1,36 @@
 language: node_js
 
 node_js:
-	- 4.4
-	
+  - '10'
+  
 env:
-		global:
-				- GIT_NAME=ange007
-				- GIT_EMAIL=ange007@users.noreply.github.com
-				- GIT_DOMAIN=github.com
-				- REPO_URL=https://${OAuth}@${GIT_DOMAIN}/${TRAVIS_REPO_SLUG}.git
+  global:
+    - GIT_NAME=ange007
+    - EMAIL=2736539+ange007@users.noreply.github.com
+    - REPO_URL=https://${OAuth}@github.com/${TRAVIS_REPO_SLUG}.git
 
 before_script:
-	- > 
-		if [[ "${TRAVIS_BRANCH}" == "master" ]]; then 
-			npm install -g gulp && gulp clean && gulp build && gulp build:min 
-		fi
-
+  - > 
+    if [[ "${TRAVIS_BRANCH}" == "dev" ]] || [[ "${TRAVIS_BRANCH}" == "master" ]]; then 
+      npm install -g gulp && gulp clean && gulp build && gulp build:min 
+    fi
 script: 
-	- git config --global user.name "${GIT_NAME}"
-	- git config --global user.email "${GIT_EMAIL}"
-	- >
-		if [[ "${TRAVIS_BRANCH}" == "master" ]]; then 
-			chmod +x ${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh
-			${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh 
-		fi
-	- >
-		if [[ "${TRAVIS_BRANCH}" == "master" ]]; then 
-			chmod +x ${TRAVIS_BUILD_DIR}/.travis-release-commit.sh
-			${TRAVIS_BUILD_DIR}/.travis-release-commit.sh 
-		fi
-	- >
-		if [[ "${TRAVIS_BRANCH}" == "release" ]]; then 
-			cd ${TRAVIS_BUILD_DIR}
-		fi
-
+  - git config --global user.name "${GIT_NAME}"
+  - git config --global user.email "${GIT_EMAIL}"
+  - >
+    if [[ "${TRAVIS_BRANCH}" == "master" ]]; then 
+      # - chmod +x ${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh
+      ${TRAVIS_BUILD_DIR}/.travis-ghpages-commit.sh 
+    fi
+  - >
+    if [[ "${TRAVIS_BRANCH}" == "master" ]]; then 
+      # - chmod +x ${TRAVIS_BUILD_DIR}/.travis-release-commit.sh
+      ${TRAVIS_BUILD_DIR}/.travis-release-commit.sh 
+    fi
+  - >
+    if [[ "${TRAVIS_BRANCH}" == "release" ]]; then 
+      cd ${TRAVIS_BUILD_DIR}
+    fi
 deploy:
 	- provider: releases
 		api_key: $OAuth
@@ -45,20 +42,19 @@ deploy:
 			repo: ange007/JQuery.myData
 			branch: release
 			tags: true
-
-	- provider: npm
-		email: ${EMAIL}
-		api_key: ${NPM_TOKEN}
-		skip_cleanup: true
-		tag: next
-		on:
-			branch: release
-			tags: true
-
+      
+  - provider: npm
+    email: ${EMAIL}
+    api_key: ${NPM_TOKEN}
+    skip_cleanup: true
+    tag: next
+    on:
+      branch: release
+      tags: true
 
 sudo: false
 dist: trusty
 
 cache:
-	directories:
-		- node_modules
+  directories:
+    - node_modules

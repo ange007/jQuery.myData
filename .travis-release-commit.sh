@@ -11,7 +11,6 @@ git clone ${REPO_URL} actual-release;
 # переходим в скопированный директорию репозитория, переключаемся в нужную ветку и чистим файлы
 cd ${DIST_PATH} && git checkout release && rm -rf *;
 # перемещаем файлы
-echo "Копирование нужных файлов...";
 cp -rp ${TRAVIS_BUILD_DIR}/build/* ${DIST_PATH};
 cp -rp ${TRAVIS_BUILD_DIR}/docs/ ${DIST_PATH};
 cp -rp ${TRAVIS_BUILD_DIR}/package.json ${DIST_PATH};
