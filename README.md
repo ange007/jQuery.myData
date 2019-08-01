@@ -46,8 +46,10 @@ $( 'body' ).myData( data, {
 	- **event** ```(string, default: 'data-on')```
 	- **event-value** ```(string, default: 'data-on-value')```
 	- **data** ```(string, default: 'data-bind')```
+	- **data-element** ```(string, default: 'data-bind-element')```
 
 ## Uses
+### Data Binding (control-to-object)
 ```javascript
 {
 	var data = { 
@@ -65,21 +67,35 @@ $( 'body' ).myData( data, {
 ```
 
 ```html
+/* Output actual time */
 <span data-bind="time"></span>
-```
-```html
+
+/* Intercepte change state */
 <input type="checkbox" data-bind="check"/>
-```
-```html
+
+/* Text data transfer */
 <label><b>Text input:</b></label> <input id="text-input" type="text" data-bind="text"/>
 <div>You write: "<span id="text-output">*</span>"</div>
 ```
+
+### Action Reaction
 ```html
+/* Function execution */
 <a href="#" class="button" data-on="click:test( 'message' )">Test</a>
-```
-```html
 <input type="checkbox" data-on="console.warn( 'click' )"/>
-```
-```html
+
+/* Function execution (custom value) */
+<a href="#" class="button" data-on="click:test" data-on-value="message">Test</a>
+
+/* Multiple function execution */
 <input type="checkbox" data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"/>
+```
+
+### Data Binding (control-to-control)
+```html
+/* Enabled control, and show block */
+<input type="checkbox" value="y" data-bind-element="[enabled:#text-element-input,visible:#text-element-block]"/>
+
+<input id="text-element-input" type="text" data-bind-element="text:#text-element-output" disabled/>
+<div id="text-element-block" style="visibility: hidden;">You write: "<span id="text-element-output">*</span>"</div>
 ```
