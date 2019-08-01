@@ -1,4 +1,7 @@
 # CHANGELOG
+## v0.4.3: 
+* Update and Fix gulpfile.js and gulp modules.
+* Changed logic for disabled state value in ```input[type=checkbox|radio]``` (and fix ```data-bind-element``` disabled action).
 ## v0.4.2:
 * Fix get values from ```form:submit``` event.
 ## v0.4.1:
