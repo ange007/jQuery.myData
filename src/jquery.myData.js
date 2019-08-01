@@ -101,7 +101,7 @@
 		// Remove events
 		unbind: function( )
 		{
-			// Отключение проверки событий
+			// Disable event watcher
 			this.element.off( '.' + pluginName, '[' + this.keys[ 'data' ] + ']' )
 						.off( '.' + pluginName, '[' + this.keys[ 'data-element' ] + ']' )
 						.off( '.' + pluginName, '[' + this.keys[ 'event' ] + ']' );
@@ -133,7 +133,7 @@
 				//
 				let value = undefined;
 
-				// Заменяем значение в список
+				// Change values
 				for( let i in context.bindings )
 				{
 					let item = context.bindings[ i ];
@@ -179,7 +179,7 @@
 					const targetElement = $( selector );
 
 					// Read value
-					let value = context._readElementValue( element, undefined );
+					let value = context._readElementValue( element, targetElement.val( ) );
 
 					// Set value
 					context._setElementValue( targetElement, action, value );
@@ -303,7 +303,7 @@
 			// input:checkbox
 			else if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) )
 			{
-				if( typeof oldValue !== 'boolean' && elementValue !== undefined ) { value = $( element ).is( ':checked' ) ? elementValue : '' }
+				if( typeof oldValue !== 'boolean' && elementValue !== undefined ) { value = $( element ).is( ':checked' ) ? elementValue : false }
 				else { value = $( element ).is( ':checked' ); }
 			}
 			// select
@@ -323,8 +323,8 @@
 				$( element[0] ).serializeArray( ).forEach( function( x ) { value[ x.name ] = x.value; } );
 			}
 
-			// Если не удалось считать значение
-			if( value === '' || value === undefined ) { value = elementValue || $( element ).html( ); };
+			// If unable to read the value
+			if( value === '' || value === undefined ) { value = elementValue || $( element ).html( ); }
 
 			return value;
 		},
@@ -344,7 +344,6 @@
 			}
 			else if( event === 'enabled' || event === 'disabled' )
 			{
-
 				if( ( typeof value === 'boolean' && value === true )
 					|| ( typeof value === 'string' && ( value === 'yes' || value === 'y' ) )
 					|| ( typeof value === 'integer' && value >= 1 ) )
