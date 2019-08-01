@@ -1,6 +1,6 @@
 /**
  * jquery.mydata - Small JQuery&Zepto plugin for two-ways data binding.
- * @version v0.4.3
+ * @version v0.4.4
  * @link https://github.com/ange007/JQuery.myData
  * @license MIT
  * @author Borisenko Vladimir
@@ -32,7 +32,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   var Plugin = function Plugin(element, targetOrOptions, callback) {
     //
     this.bindings = [];
-    this.checkTimer = undefined; //
+    this.checkTimer = undefined;
+    this.bindEventsObserver = undefined; //
 
     this.element = $(element);
     this.callbacks = {};
@@ -77,25 +78,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   Plugin.prototype = {
     // Add events
     bind: function bind() {
-      var context = this; // Формируем список проверяемых параметров
-      // @todo: Будет не верно работать в случае с динамически изменяемым содержимим элемента 
-      //		(так как считывание происходит только один раз)
+      var context = this;
 
-      this.element.find('[' + this.keys['data'] + ']').each(function (index, item) {
-        var element = $(item),
-            propName = element.attr(context.keys['data']) || '';
-
-        if (propName === '') {
-          return;
-        } // Add element to list
-
-
-        context.bindings.push({
-          element: item,
-          property: propName,
-          value: undefined
-        });
-      });
+      this._setBindEvents();
 
       this._setEventListeners();
 
@@ -108,7 +93,46 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
       clearInterval(this.checkTimer); //
 
+      this.bindEventsObserver.disconnect(); //
+
       this.bindings = [];
+    },
+    // Add elements to [data-on] list
+    _setBindEvents: function _setBindEvents(element) {
+      var context = this; //
+
+      var setBinding = function setBinding(element) {
+        var $element = $(element),
+            propName = $element.attr(context.keys['data']) || '';
+
+        if (propName === '') {
+          return;
+        } // Add element to list
+
+
+        context.bindings.push({
+          element: element,
+          property: propName,
+          value: undefined
+        });
+      }; // Create the list of checked parameters
+
+
+      this.element.find('[' + this.keys['data'] + ']').each(function (index, item) {
+        setBinding(item);
+      }); // Wait new elements
+
+      this.bindEventsObserver = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+          mutation.addedNodes.forEach(function (item) {
+            setBinding(item);
+          });
+        });
+      }); //
+
+      this.bindEventsObserver.observe(this.element[0], {
+        childList: true
+      });
     },
     // Set events 
     _setEventListeners: function _setEventListeners() {
@@ -257,7 +281,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     // Timer 
     _setCheckTimer: function _setCheckTimer() {
       var delay = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 250;
-      var context = this;
+      var context = this; // Clear timer
+
+      clearInterval(this.checkTimer); //
+
       this.checkTimer = setInterval(function () {
         for (var i in context.bindings) {
           var item = context.bindings[i];
@@ -289,8 +316,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             $(element).val(value);
           } else {
             $(element).html(value);
-          } // Callback
+          }
 
+          console.log('change data callback'); // Callback
 
           if (typeof context.callbacks.get === 'function') {
             context.callbacks.get(element, targetKey, value, {});
@@ -375,7 +403,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         }
       }
     },
-    //
+    // Extract actions from data
     // ="focusin,focusout:action" 
     // ="[click:action1,change:action2]"
     // ="click:test( '!!!' )"
