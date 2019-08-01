@@ -45,7 +45,7 @@ const bundles =
 	}
 };
 
-var bundle = bundles[ 'dev' ];
+var bundle = { };
 
 /* * * * * * * * * * * * * *
  * Tasks
@@ -54,9 +54,7 @@ var bundle = bundles[ 'dev' ];
 // Clear old Build
 gulp.task( 'clean', function( done )
 {
-	rimraf.sync( paths.build + '/**' );
-
-	done( );
+	rimraf( paths.build + '/**', done );
 } );
 
 // Config sync: Bower & Composer
@@ -98,7 +96,7 @@ gulp.task( 'js:build', function( done )
 					' */',
 					'',
 					'' ].join( '\n' );
-
+	
 	// Create file
 	gulp.src( paths.src + '**/*.js' )
 		.pipe( plugins.debug( { title: 'js:' } ) )
@@ -112,7 +110,7 @@ gulp.task( 'js:build', function( done )
 } );
 
 // Standart Build
-gulp.task( 'build', gulp.series( 'js:build' ) );
+gulp.task( 'build', gulp.series( function( done ) { bundle = bundles[ 'dev' ]; done( ); }, 'js:build' ) );
 
 // Minified Build
 gulp.task( 'build:min', gulp.series( function( done ) { bundle = bundles[ 'min' ]; done( ); }, 'js:build' ) );

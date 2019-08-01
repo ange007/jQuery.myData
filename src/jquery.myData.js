@@ -22,6 +22,7 @@
 		//
 		this.bindings = [ ];
 		this.checkTimer = undefined;
+		this.bindEventsObserver = undefined;
 
 		//
 		this.element = $( element );
@@ -80,20 +81,7 @@
 		{
 			const context = this;
 
-			// Формируем список проверяемых параметров
-			// @todo: Будет не верно работать в случае с динамически изменяемым содержимим элемента 
-			//		(так как считывание происходит только один раз)
-			this.element.find( '[' + this.keys[ 'data' ] + ']' ).each( function( index, item )
-			{
-				let element = $( item ),
-					propName = element.attr( context.keys[ 'data' ] ) || '';
-
-				if( propName === '' ) { return; }
-
-				// Add element to list
-				context.bindings.push( { element: item, property: propName, value: undefined } );
-			} );
-
+			this._setBindEvents( );
 			this._setEventListeners( );
 			this._setCheckTimer( );
 		},
@@ -110,7 +98,49 @@
 			clearInterval( this.checkTimer );
 
 			//
+			this.bindEventsObserver.disconnect( );
+
+			//
 			this.bindings = [ ];
+		},
+
+		// Add elements to [data-on] list
+		_setBindEvents: function( element )
+		{
+			const context = this;
+
+			//
+			const setBinding = function( element )
+			{
+				const $element = $( element ),
+					propName = $element.attr( context.keys[ 'data' ] ) || '';
+
+				if( propName === '' ) { return; }
+
+				// Add element to list
+				context.bindings.push( { element: element, property: propName, value: undefined } );
+			}
+
+			// Create the list of checked parameters
+			this.element.find( '[' + this.keys[ 'data' ] + ']' ).each( function( index, item )
+			{
+				setBinding( item );
+			} );
+
+			// Wait new elements
+			this.bindEventsObserver = new MutationObserver( function( mutations )
+			{
+				mutations.forEach( function( mutation ) 
+				{
+					mutation.addedNodes.forEach( function( item ) 
+					{
+						setBinding( item );
+					} );
+				} ); 
+			} );
+
+			//
+			this.bindEventsObserver.observe( this.element[0], { childList: true } );
 		},
 
 		// Set events 
@@ -256,6 +286,10 @@
 		{
 			let context = this;
 
+			// Clear timer
+			clearInterval( this.checkTimer );
+
+			//
 			this.checkTimer = setInterval( function( )
 			{
 				for( let i in context.bindings )
@@ -282,6 +316,8 @@
 					if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) ) { $( element ).attr( 'checked', value ); }
 					else if( element.is( 'select' ) || element.is( 'input' ) || element.is( 'textarea' ) ) { $( element ).val( value ); }
 					else { $( element ).html( value ); }
+
+					console.log( 'change data callback' );
 
 					// Callback
 					if( typeof context.callbacks.get === 'function' ) { context.callbacks.get( element, targetKey, value, { } ); }
@@ -364,7 +400,7 @@
 			}
 		},
 
-		//
+		// Extract actions from data
 		// ="focusin,focusout:action" 
 		// ="[click:action1,change:action2]"
 		// ="click:test( '!!!' )"
