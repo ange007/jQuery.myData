@@ -13,13 +13,81 @@
 				background-color: rgb(66, 134, 244);
 				font-family: "-apple-system",BlinkMacSystemFont,Arial,sans-serif;
 				font-size: 14px;
-				color: #222;
+				color: rgb(13, 35, 71);
 				line-height: 18px;
 			}
-			.container {
+
+			#header {
+				width: auto;
+				margin: 0 auto;
+				padding: 5px;
+				border: 2px solid rgb(13, 35, 71);
+				border-radius: 10px;
+				background-color: rgb(41, 93, 179);
+				text-align: center;
+				margin-bottom: 20px;
+				overflow: hidden;
+			}
+
+			#header .buttons {
+				float: none;
+				text-align: center;
+				margin: 0 auto;
+				width: auto;
+			}
+
+			#header .buttons a {
+				-webkit-font-smoothing: antialiased;
+				color:  #EBEBEB;
+				background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAQCAYAAADAvYV+AAAAsUlEQVQoU2NkQAVNQK4YktALILsBxmdEU3wHyFdGErsJZGsMQsVpQDcpQd2VDqQFkNz8DsieDeXfAXkQ5KEjQCyB5llk7lMgxwYWGrpAzkEgFsSi4Q1QzA6IryMHnSVQYDcQcyNp+AxkOwHxGZAYeji7AcU2AzEbEP8AYg+ojWD96IpBYsFAvBSIQ4B4C7KzsCkGycsB8SN09+NSjMWfEGd8wSqDKfgHpHgPkYr/kuQMAP9eHz4VdRPNAAAAAElFTkSuQmCC') no-repeat 1px;
+				font-weight: normal;
+				padding: 2px 2px 2px 22px;
+				height: 30px;
+			}
+
+			#header a.github {
+				background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAByklEQVQ4T52SMUwaYRTH/+/OK9tF5I7D0MkEB0RZm1ZKYmqLi7GUuNXEGAd33RwcTHSjQ9OSbjZpbEx0g7o2EHAhbMZKurQBLAr0Eh0EvPP7SFPbIEfgJZcv997//e/d730EFi6XSzUNY9MwjLBApPBcp2Cac0EUD8SBgfVisXhBmqY50WhkIIojVo1tNcP4Ltpsj0hzOj/ANJd7av4jJtOMkaoo593GtvidMmmqav4rsNvt8Pl8SCaTf9NEhGAwiFwuB13X//NrM3gZDuN9LIZsNov86WlL7PV6MeH3Y2lxEfF43NpgdW0N/Lkvtre28CYa7WzARz0+OYEsyyiVSmArgyRJaDabcLvdqFQqGB8b62zAxT8LBcxHIhhkLL4kEi3xi1AIV5eX+LS7C/fwMFvaHbY2Bl8ZvLnZWWSOjvB8ehqCICBxeIink5P4vLeHZ1NT1gwCgQBCMzP4uLODfD7fEns8HrxeWGgBzKTT1ga8ylf5hH2Rn5xLtVpFKpXC71qtjS2pDkeZjan2cxMZ5V/kUpR3JtFKXwbAW2LrcdzU62nGdbQXE6b/9uD6+jHxpoeyPNSQpA2G/BV71boYnbH6vq1e3/ih67VbHNOfsREjkz8AAAAASUVORK5CYII=') no-repeat 1px;
+			}
+
+			#header a.buttons:hover {
+				color: #fff;
+				text-decoration: none;
+			}
+
+			#header ul {
+				list-style: none;
+				margin: 0; 
+				padding: 4px;
+			}
+
+			#header ul li {
+				display: inline-block;
+				margin-right: 5px;
+				padding: 3px;
+			}
+
+			#header h1 {
+				font-size: 25px;
+			}
+
+			#header h1 a {
+				text-decoration: none;
+				color: rgb(5, 47, 116);
+			}
+
+			h2 { 
+				margin-top: 50px;
+			}
+
+			h3 { 
+				color: rgb(24, 66, 204);
+			}
+
+			#container {
 				margin: 0 auto;
 				width: 400px;
 			}
+
 			.panel {
 				width: 100%;
 				padding: 10px;
@@ -27,7 +95,9 @@
 				border-radius: 10px;
 				text-align: center;
 				background-color: #f0f8ff;
+				margin-bottom: 20px;
 			}
+
 			code {
 				padding: 0 0px 1px;
 				border: 1px solid #E1E1E1;
@@ -39,16 +109,24 @@
 	</head>
 
 	<body>
-		<div class="container">
+		<div id="header">
+			<h1><a href="https://github.com/ange007/jQuery.myData" target="_blank">jQuery.MyData</a></h1>
+			<ul class="buttons">
+				<li class="download"><a href="https://github.com/ange007/jQuery.myData/zipball/release">Download ZIP</a></li>
+				<li class="download"><a href="https://github.com/ange007/jQuery.myData/tarball/release">Download TAR</a></li>
+				<li><a class="github" href="https://github.com/ange007/jQuery.myData">Repo</a></li>
+			</ul>
+		</div>
+		<div id="container">
 			<form action="#" id="form" data-on="submit:submit">
-				<h3>data-bind</h3>
+				<h2>data-bind</h2>
+				<h3>Bind element to JS object</h3>
 
 				<div class="panel">
 					<label><b>Actual time:</b></label>
 					<span data-bind="time"></span>
 				</div>
 
-				<br />
 				<div class="panel">
 					<label>
 						<b>Activated "input:text":</b>
@@ -56,31 +134,48 @@
 					</label>
 				</div>
 
-				<br />
 				<div class="panel">
 					<label><b>Text input test:</b></label> <input id="text-input" name="data-bind-input-text" type="text" data-bind="text"/>
 					<div>You write: "<span id="text-output">*</span>"</div>
 				</div>
 
-				<h3>data-bind-element</h3>
+				<h2>data-bind-element</h2>
+				<h3>Bind element to other element</h3>
 
 				<div class="panel">
+						<label>
+							<b>Show "Activate panel":</b>
+							<input type="checkbox" name="data-bind-element-input-activate" value="y" data-bind-element="[visible:#activate-panel]"/>
+						</label>
+					</div>
+
+				<div class="panel" id="activate-panel">
 					<label>
 						<b>Activated "input:text":</b>
-						<input type="checkbox" name="data-bind-element-input-activate" value="y" data-bind-element="[enabled:#text-element-input,visible:#text-element-block]"/>
+						<br />
+						<label>
+							<input type="radio" name="data-bind-element-input-activate" value="y" data-bind-element="[enabled:#text-element-input,visible:#text-element-block]"/>
+							Yes
+						</label>
+						<br />
+						<label>
+							<input type="radio" name="data-bind-element-input-activate" value="y" checked data-bind-element="[disabled:#text-element-input,hidden:#text-element-block]"/>
+							No
+						</label>
 					</label>
 				</div>
 
-				<br />
+
 				<div class="panel">
 					<label>
 						<b>Text input test:</b>
 						<input id="text-element-input" type="text" name="data-bind-element-input-text" data-bind-element="text:#text-element-output" disabled/>
 					</label>
-					<div id="text-element-block" style="visibility: hidden;">You write: "<span id="text-element-output">*</span>"</div>
+					<div id="text-element-block">You write: "<span id="text-element-output">*</span>"</div>
 				</div>
 
-				<h3>data-on</h3>
+				<h2>data-on</h2>
+				<h3>Bind element to action</h3>
 
 				<div class="panel">
 					<code>data-on="click:test"</code>
@@ -91,14 +186,12 @@
 					</label>
 				</div>
 
-				<br />
 				<div class="panel">
 					<code>data-on="click:test( 'message' )"</code>
 					<br /><br />
 					<a href="#" class="button" data-on="click:test( 'message' )">Test</a>
 				</div>
 
-				<br />
 				<div class="panel">
 					<code>data-on="console.warn( 'click' )"</code>
 					<br /><br />
@@ -106,7 +199,6 @@
 					<input type="checkbox" name="data-on-show-state-2" value="y" data-on="console.warn( 'click' )"/></label>
 				</div>
 
-				<br />
 				<div class="panel">
 					<code>data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"</code>
 					<br /><br />
@@ -114,7 +206,6 @@
 					<input type="checkbox" name="data-on-show-state-3" value="y" data-on="[ click: console.warn( 'click' ), change: console.warn( 'change' ) ]"/></label>
 				</div>
 
-				<br />
 				<div class="panel">
 					<code>form data-on="submit:submit"</code>
 					<br /><br />
@@ -144,7 +235,7 @@
 				'text': '',
 				'check': false,
 				'test': function( value, elementData ) { alert( 'Test alert: ' + value ); },
-				'submit': function( value, elementData ) { debugger; alert( JSON.stringify( value ) ); }
+				'submit': function( value, elementData ) { alert( JSON.stringify( value ) ); }
 			};
 
 			// Activate two-way binding
