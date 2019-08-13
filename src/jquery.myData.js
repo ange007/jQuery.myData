@@ -17,77 +17,79 @@
 	const isJQ = !!( window.jQuery );
 
 	// Plugin
-	let Plugin = function( element, targetOrOptions, callback )
+	class Plugin 
 	{
-		//
-		this.bindings = [ ];
-		this.checkTimer = undefined;
-		this.bindEventsObserver = undefined;
-
-		//
-		this.element = $( element );
-		this.callbacks = { };
-		this.keys = {
-			'event': 'data-on',
-			'event-value': 'data-on-value',
-			'data': 'data-bind',
-			'data-element': 'data-bind-element',
-		};
-
-		// Event and Data target
-		if( typeof targetOrOptions === 'object' && targetOrOptions.hasOwnProperty( 'event' ) && targetOrOptions.hasOwnProperty( 'data' ) )
+		constructor( element, targetOrOptions, callback )
 		{
-			this.eventTarget = targetOrOptions.event;
-			this.dataTarget = targetOrOptions.data;
+			//
+			this.bindings = [ ];
+			this.checkTimer = undefined;
+			this.bindEventsObserver = undefined;
+			this.bindElementsObserver = undefined;
 
-			// Custom keys
-			if( typeof targetOrOptions[ 'data-keys' ] === 'object' )
+			//
+			this.element = $( element );
+			this.callbacks = { };
+			this.keys = {
+				'event': 'data-on',
+				'event-value': 'data-on-value',
+				'data': 'data-bind',
+				'data-element': 'data-bind-element',
+			};
+
+			// Event and Data target
+			if( typeof targetOrOptions === 'object' && targetOrOptions.hasOwnProperty( 'event' ) && targetOrOptions.hasOwnProperty( 'data' ) )
 			{
-				this.keys = { 
-					'event': targetOrOptions[ 'data-keys' ][ 'event' ] || this.keys[ 'event' ],
-					'event-value': targetOrOptions[ 'data-keys' ][ 'event-value' ] || this.keys[ 'event-value' ],
-					'data': targetOrOptions[ 'data-keys' ][ 'data' ] || this.keys[ 'data' ],
-					'data-element': targetOrOptions[ 'data-keys' ][ 'data-element' ] || this.keys[ 'data-element' ],
-				};
+				this.eventTarget = targetOrOptions.event;
+				this.dataTarget = targetOrOptions.data;
+
+				// Custom keys
+				if( typeof targetOrOptions[ 'data-keys' ] === 'object' )
+				{
+					this.keys = { 
+						'event': targetOrOptions[ 'data-keys' ][ 'event' ] || this.keys[ 'event' ],
+						'event-value': targetOrOptions[ 'data-keys' ][ 'event-value' ] || this.keys[ 'event-value' ],
+						'data': targetOrOptions[ 'data-keys' ][ 'data' ] || this.keys[ 'data' ],
+						'data-element': targetOrOptions[ 'data-keys' ][ 'data-element' ] || this.keys[ 'data-element' ],
+					};
+				}
 			}
-		}
-		else
-		{
-			this.eventTarget = targetOrOptions;
-			this.dataTarget = targetOrOptions;
+			else
+			{
+				this.eventTarget = targetOrOptions;
+				this.dataTarget = targetOrOptions;
+			}
+
+			// Callback`s
+			if( typeof callback === 'function' )
+			{
+				this.callbacks.main = callback;
+			}
+			else if( typeof callback === 'object' )
+			{
+				this.callbacks.main = callback.main;
+				this.callbacks.get = callback.get;
+				this.callbacks.set = callback.set;
+				this.callbacks.on = callback.on;
+			}
+
+			// Init
+			this.bind( );
 		}
 
-		// Callback`s
-		if( typeof callback === 'function' )
-		{
-			this.callbacks.main = callback;
-		}
-		else if( typeof callback === 'object' )
-		{
-			this.callbacks.main = callback.main;
-			this.callbacks.get = callback.get;
-			this.callbacks.set = callback.set;
-			this.callbacks.on = callback.on;
-		}
-
-		// Init
-		this.bind( );
-	};
-
-	Plugin.prototype =
-	{
 		// Add events
-		bind: function( )
+		bind( )
 		{
 			const context = this;
 
 			this._setBindEvents( );
 			this._setEventListeners( );
-			this._setCheckTimer( );
-		},
+			this._triggerBindElementEvents( );
+			this._setCheckTimer( 250 );
+		}
 
 		// Remove events
-		unbind: function( )
+		unbind( )
 		{
 			// Disable event watcher
 			this.element.off( '.' + pluginName, '[' + this.keys[ 'data' ] + ']' )
@@ -99,52 +101,14 @@
 
 			//
 			this.bindEventsObserver.disconnect( );
+			this.bindElementsObserver.disconnect( );
 
 			//
 			this.bindings = [ ];
-		},
-
-		// Add elements to [data-on] list
-		_setBindEvents: function( element )
-		{
-			const context = this;
-
-			//
-			const setBinding = function( element )
-			{
-				const $element = $( element ),
-					propName = $element.attr( context.keys[ 'data' ] ) || '';
-
-				if( propName === '' ) { return; }
-
-				// Add element to list
-				context.bindings.push( { element: element, property: propName, value: undefined } );
-			}
-
-			// Create the list of checked parameters
-			this.element.find( '[' + this.keys[ 'data' ] + ']' ).each( function( index, item )
-			{
-				setBinding( item );
-			} );
-
-			// Wait new elements
-			this.bindEventsObserver = new MutationObserver( function( mutations )
-			{
-				mutations.forEach( function( mutation ) 
-				{
-					mutation.addedNodes.forEach( function( item ) 
-					{
-						setBinding( item );
-					} );
-				} ); 
-			} );
-
-			//
-			this.bindEventsObserver.observe( this.element[0], { childList: true } );
-		},
+		}
 
 		// Set events 
-		_setEventListeners: function( )
+		_setEventListeners( )
 		{
 			const context = this;
 			const bindEvents = [ 'change', 'keyup', 'input', 'paste' ].map( function( item ) { return item += '.' + pluginName; } );
@@ -204,7 +168,7 @@
 				const element = $( event.target );
 				const actionData = element.attr( context.keys[ 'data-element' ] );
 
-				context._extractActions( element, event, actionData, function( action, selector )
+				context._extractActions( element, actionData, function( action, selector )
 				{
 					const targetElement = $( selector );
 
@@ -225,7 +189,7 @@
 				const element = $( this );
 				const actionData = element.attr( context.keys[ 'event' ] );
 
-				context._extractActions( element, event, actionData, function( eventType, handlerName )
+				context._extractActions( element, actionData, function( eventType, handlerName )
 				{
 					const handlerFunc = handlerName.match( /([a-zA-Z0-9,\.\-_\/]+)(?:\(([^)]+)\))?$/ ) || false;
 
@@ -279,10 +243,92 @@
 					}
 				} );
 			} );
-		},
+		}
+
+		// Add new elements to [data-bind] list
+		_setBindEvents( )
+		{
+			const context = this;
+			const setBinding = function( element )
+			{
+				const $element = $( element ),
+					propName = $element.attr( context.keys[ 'data' ] ) || '';
+
+				if( propName === '' ) { return; }
+
+				// Add element to list
+				context.bindings.push( { element: element, property: propName, value: undefined } );
+			}
+
+			// Create the list of checked parameters
+			this.element.find( '[' + this.keys[ 'data' ] + ']' ).each( function( index, item )
+			{
+				setBinding( item );
+			} );
+
+			// Wait new elements
+			this.bindEventsObserver = new MutationObserver( function( mutations )
+			{
+				mutations.forEach( function( mutation ) 
+				{
+					mutation.addedNodes.forEach( function( item ) 
+					{
+						setBinding( item );
+					} );
+				} ); 
+			} );
+
+			//
+			this.bindEventsObserver.observe( this.element[0], { childList: true } );
+		}
+
+		// [data-bind-element] Triggered events for new elements
+		_triggerBindElementEvents( )
+		{
+			const context = this;
+			const trigger = function( element )
+			{
+				const $element = $( element );
+				const actionData = $element.attr( context.keys[ 'data-element' ] ) || '';
+
+				if( actionData === '' ) { return; }
+
+				context._extractActions( $element, actionData, function( action, selector )
+				{
+					const targetElement = $( selector );
+
+					// Read value
+					let value = context._readElementValue( $element, targetElement.val( ) );
+
+					// Set value
+					context._setElementValue( targetElement, action, value );
+				} );
+			}
+
+			// Trigger leave elements
+			this.element.find( '[' + this.keys[ 'data-element' ] + ']' ).each( function( index, item )
+			{
+				trigger( item );
+			} );
+
+			// Wait new elements
+			this.bindElementsObserver = new MutationObserver( function( mutations )
+			{
+				mutations.forEach( function( mutation ) 
+				{
+					mutation.addedNodes.forEach( function( item ) 
+					{
+						trigger( item );
+					} );
+				} ); 
+			} );
+
+			//
+			this.bindElementsObserver.observe( this.element[0], { childList: true } );
+		}
 
 		// Timer 
-		_setCheckTimer: function( delay = 250 )
+		_setCheckTimer( delay )
 		{
 			let context = this;
 
@@ -317,20 +363,17 @@
 					else if( element.is( 'select' ) || element.is( 'input' ) || element.is( 'textarea' ) ) { $( element ).val( value ); }
 					else { $( element ).html( value ); }
 
-					console.log( 'change data callback' );
-
 					// Callback
 					if( typeof context.callbacks.get === 'function' ) { context.callbacks.get( element, targetKey, value, { } ); }
 					else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'get', element, targetKey, value, { } ); }
 				}
 			}, delay );
-		},
+		}
 
 		// Read value
-		_readElementValue: function( element, oldValue )
+		_readElementValue( element, oldValue )
 		{
 			let value = undefined;
-
 			let elementValue = $( element ).attr( 'value' );
 			let customValue = $( element ).attr( this.keys[ 'event-value' ] );
 
@@ -363,10 +406,10 @@
 			if( value === '' || value === undefined ) { value = elementValue || $( element ).html( ); }
 
 			return value;
-		},
+		}
 
 		// Set value
-		_setElementValue: function( element, event, value )
+		_setElementValue( element, event, value )
 		{
 			if( event === 'visible' || event === 'hidden' )
 			{
@@ -376,7 +419,17 @@
 					|| ( typeof value === 'string' && ( value === 'yes' || value === 'y' || value === 'true' ) )
 					|| ( typeof value === 'integer' && value >= 1 ) ) { state = event; }
 
-				element.css( 'visibility', state );
+				// Display invisible
+				if( element.css( 'display' ) === '' 
+					|| element.css( 'display' ) === 'block' 
+					|| element.css( 'display' ) === 'none' )
+				{
+					element.css( 'display', ( state === 'hidden' ? 'none' : 'block' ) );
+				}
+				else
+				{
+					element.css( 'visibility', state );
+				}
 			}
 			else if( event === 'enabled' || event === 'disabled' )
 			{
@@ -398,13 +451,13 @@
 				if( element.is( 'input' ) || element.is( 'textarea' ) ) { element.val( value ); }
 				else { element.text( value ); }
 			}
-		},
+		}
 
 		// Extract actions from data
 		// ="focusin,focusout:action" 
 		// ="[click:action1,change:action2]"
 		// ="click:test( '!!!' )"
-		_extractActions: function( element, event, actionData, callback )
+		_extractActions( element, actionData, callback )
 		{
 			let defaultEvent = 'click';
 			if( element.is( 'form' ) ) { defaultEvent = 'submit'; }
@@ -440,10 +493,10 @@
 					callback( action, value );
 				} );
 			} );
-		},
+		}
 
 		// Destroy
-		destroy: function( )
+		destroy( )
 		{
 			this.unbind( );
 		}

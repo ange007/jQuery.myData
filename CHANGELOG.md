@@ -1,4 +1,8 @@
 # CHANGELOG
+## v0.4.5: 
+* Triggered ```data-bind-element``` events on start (need for actualizing event state).
+* Added ```MutationObserver``` for wait dynamic created elements and triggered ```data-bind-element``` events.
+* Update demo.
 ## v0.4.4: 
 * Update and Fix ```gulpfile.js```.
 * Update README.md.

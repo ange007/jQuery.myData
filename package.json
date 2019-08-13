@@ -1,7 +1,7 @@
 {
   "name": "jquery.mydata",
-  "version": "0.4.4",
-  "author": "Borisenko Vladimir",
+  "version": "0.4.5",
+  "author": "Borysenko Vladymyr",
   "description": "Small JQuery&Zepto plugin for two-ways data binding.",
   "license": "MIT",
   "homepage": "https://github.com/ange007/JQuery.myData",
