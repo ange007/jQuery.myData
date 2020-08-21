@@ -19,9 +19,10 @@
 	// Plugin
 	class Plugin 
 	{
-		constructor( element, targetOrOptions, callback )
+		constructor( element, targetOrOptions, callback, debug )
 		{
 			//
+			this.debug = debug;
 			this.bindings = [ ];
 			this.checkTimer = undefined;
 			this.bindEventsObserver = undefined;
@@ -32,9 +33,10 @@
 			this.callbacks = { };
 			this.keys = {
 				'event': 'data-on',
-				'event-value': 'data-on-value',
 				'data': 'data-bind',
 				'data-element': 'data-bind-element',
+				'value': 'data-value',
+				'default-value': 'data-default-value',
 			};
 
 			// Event and Data target
@@ -48,7 +50,8 @@
 				{
 					this.keys = { 
 						'event': targetOrOptions[ 'data-keys' ][ 'event' ] || this.keys[ 'event' ],
-						'event-value': targetOrOptions[ 'data-keys' ][ 'event-value' ] || this.keys[ 'event-value' ],
+						'value': targetOrOptions[ 'data-keys' ][ 'value' ] || this.keys[ 'value' ],
+						'default-value': targetOrOptions[ 'data-keys' ][ 'default-value' ] || this.keys[ 'default-value' ],
 						'data': targetOrOptions[ 'data-keys' ][ 'data' ] || this.keys[ 'data' ],
 						'data-element': targetOrOptions[ 'data-keys' ][ 'data-element' ] || this.keys[ 'data-element' ],
 					};
@@ -80,8 +83,6 @@
 		// Add events
 		bind( )
 		{
-			const context = this;
-
 			this._setBindEvents( );
 			this._setEventListeners( );
 			this._triggerBindElementEvents( );
@@ -110,32 +111,31 @@
 		// Set events 
 		_setEventListeners( )
 		{
-			const context = this;
-			const bindEvents = [ 'change', 'keyup', 'input', 'paste' ].map( function( item ) { return item += '.' + pluginName; } );
+			const bindEvents = [ 'change', 'keyup', 'input', 'paste' ].map( ( item ) => { return item += '.' + pluginName; } );
 			const onEvents = [ 'click', 'dblclick', 'change', 'input', 'paste', 'load', 'unload', 'select', 
 								'resize', 'scroll', 'submit', 'error', 'keydown', 'keyup', 'keypress', 
-								'mouseover', 'mousedown', 'mouseup', 'mousemove', 'mouseout', 'mouseenter', 'mouseleave',
-								'blur', 'focus', 'focusin', 'focusout' ].map( function( item ) { return item += '.' + pluginName; } );
+								'mouseover', 'mousedown', 'mouseup', /*'mousemove',*/ 'mouseout', 'mouseenter', 'mouseleave',
+								'blur', 'focus', 'focusin', 'focusout' ].map( ( item ) => { return item += '.' + pluginName; } );
 
 			// Change state reaction
 			// data-bind="key" 
-			this.element.on( bindEvents.join( ' ' ), '[' + this.keys[ 'data' ] + ']', function( event )
+			this.element.on( bindEvents.join( ' ' ), '[' + this.keys[ 'data' ] + ']', ( event ) =>
 			{
-				const element = $( event.target );
-				const targetKey = element.attr( context.keys[ 'data' ] );
+				const element = $( event.currentTarget );
+				const targetKey = element.attr( this.keys[ 'data' ] );
 
 				//
 				let value = undefined;
 
 				// Change values
-				for( let i in context.bindings )
+				for( let i in this.bindings )
 				{
-					let item = context.bindings[ i ];
+					let item = this.bindings[ i ];
 
-					if( item.element !== event.target || item.property !== targetKey ) { continue; }
+					if( item.element !== event.currentTarget || item.property !== targetKey ) { continue; }
 
 					// Read value
-					value = context._readElementValue( element, item.value );
+					value = this._readElementValue( element, item.value );
 
 					// Generate function name
 					let setFunctionName = 'set' + targetKey.charAt( 0 ).toUpperCase( ) + targetKey.substr( 1 );
@@ -146,37 +146,45 @@
 						item.value = value;
 
 						// Send value
-						if( typeof context.dataTarget[ setFunctionName ] === 'function' ) { context.dataTarget[ setFunctionName ].apply( context.dataTarget, [ value ] );	}
-						else if( typeof context.dataTarget[ targetKey ] === 'function' ) { context.dataTarget[ targetKey ].apply( context.dataTarget, [ value ] ); }
-						else if( context.dataTarget.hasOwnProperty( targetKey ) ) { context.dataTarget[ targetKey ] = value; }
+						if( typeof this.dataTarget[ setFunctionName ] === 'function' ) { this.dataTarget[ setFunctionName ].apply( this.dataTarget, [ value ] );	}
+						else if( typeof this.dataTarget[ targetKey ] === 'function' ) { this.dataTarget[ targetKey ].apply( this.dataTarget, [ value ] ); }
+						else if( this.dataTarget.hasOwnProperty( targetKey ) ) { this.dataTarget[ targetKey ] = value; }
 
 						break;
 					}
 				}
 
 				//
-				if( typeof context.callbacks.set === 'function' ) {	context.callbacks.set( element, targetKey, value, { type: event.type } ); }
-				else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'set', element, targetKey, value, { type: event.type } ); }
+				if( this.debug ) { console.info( `jQuery.myData - Binding Data (element > object) (data-bind): Set "${ value }" to "(set)${ targetKey }", event: ${ event.type }`, element.get( 0 ) ); }
+
+				//
+				if( typeof this.callbacks.set === 'function' ) { this.callbacks.set( element, targetKey, value, { type: event.type } ); }
+				else if( typeof this.callbacks.main === 'function' ) { this.callbacks.main( 'set', element, targetKey, value, { type: event.type } ); }
 			} );
 
 			// Element connection
 			// data-bind-element="enabled,text:#id"
 			// data-bind-element="[enabled:#id,text:input[name=qqq]]"
 			// data-bind-element="visible:.class"
-			this.element.on( bindEvents.join( ' ' ), '[' + this.keys[ 'data-element' ] + ']', function( event )
+			this.element.on( bindEvents.join( ' ' ) + ' click', '[' + this.keys[ 'data-element' ] + ']', ( event ) =>
 			{
-				const element = $( event.target );
-				const actionData = element.attr( context.keys[ 'data-element' ] );
+				const element = $( event.currentTarget );
+				const actionData = element.attr( this.keys[ 'data-element' ] );
 
-				context._extractActions( element, actionData, function( action, selector )
+				this._extractActions( element, actionData, ( action, selector ) =>
 				{
-					const targetElement = $( selector );
+					const targetElement = element.find( selector ).length 
+											? element.find( selector ) 
+											: $( selector );
 
 					// Read value
-					let value = context._readElementValue( element, targetElement.val( ) );
+					let value = this._readElementValue( element, targetElement.val( ) );
+
+					//
+					if( this.debug ) { console.info( `jQuery.myData - Element connection (data-bind-element): Set element "${ selector }" value: "${ value }", event: ${ event.type }`, element.get( 0 ) ); }
 
 					// Set value
-					context._setElementValue( targetElement, action, value );
+					this._setElementValue( targetElement, action, value );
 				} );
 			} );
 
@@ -184,12 +192,12 @@
 			// data-on="focusin,focusout:action"
 			// data-on="[click:action1,change:action2]"
 			// data-on="click:test( '!!!' )"
-			this.element.on( onEvents.join( ' ' ), '[' + this.keys[ 'event' ] + ']', function( event )
+			this.element.on( onEvents.join( ' ' ), '[' + this.keys[ 'event' ] + ']', ( event ) =>
 			{
-				const element = $( this );
-				const actionData = element.attr( context.keys[ 'event' ] );
+				const element = $( event.currentTarget );
+				const actionData = element.attr( this.keys[ 'event' ] );
 
-				context._extractActions( element, actionData, function( eventType, handlerName )
+				this._extractActions( element, actionData, ( eventType, handlerName ) => 
 				{
 					const handlerFunc = handlerName.match( /([a-zA-Z0-9,\.\-_\/]+)(?:\(([^)]+)\))?$/ ) || false;
 
@@ -198,17 +206,17 @@
 
 					//
 					const name = handlerFunc[ 1 ];
-					const args = ( typeof handlerFunc[ 2 ] === 'string' ) ? handlerFunc[ 2 ].split( ',' ).map( function( item ) { return ( item.trim( ).match( /^['"]{0,}(.*?)['"]{0,}$/ )[ 1 ] || '' ); } ) : [ ];
-					const targetFuncExist = ( context.eventTarget !== undefined && typeof context.eventTarget[ name ] === 'function' );
+					const args = ( typeof handlerFunc[ 2 ] === 'string' ) ? handlerFunc[ 2 ].split( ',' ).map( ( item ) => { return ( item.trim( ).match( /^['"]{0,}(.*?)['"]{0,}$/ )[ 1 ] || '' ); } ) : [ ];
+					const targetFuncExist = ( this.eventTarget !== undefined && typeof this.eventTarget[ name ] === 'function' );
 					const windowFuncExist = ( typeof window[ name ] === 'function' );
 
 					// Read value
-					const value = context._readElementValue( element, undefined );
+					const value = this._readElementValue( element, undefined );
 
 					//
 					let callArgs = $.extend( [ ], args );
-					if( callArgs.length > 0 ) { callArgs.push( [ element, event, value ] ); }
-					else { callArgs = [ value, [ element, event, value ] ]; }
+					if( callArgs.length > 0 ) { callArgs.push( { element: element, event: event, value: value } ); }
+					else { callArgs = [ value, { element: element, event: event, value: value } ]; }
 
 					//
 					let result = undefined;
@@ -216,16 +224,20 @@
 					// Call function
 					if( targetFuncExist )
 					{
-						result = context.eventTarget[ name ].apply( context.eventTarget, callArgs );
+						result = this.eventTarget[ name ].apply( this.eventTarget, callArgs );
 					}
 					else
 					{
-						try { result = eval( name ).apply( window, callArgs ); } catch( err ) { console.warn( 'jQuery.myData: Could not call - "' + name + '"' ); }
+						try { result = eval( name ).apply( window, callArgs ); } 
+						catch( err ) { console.warn( `jQuery.myData: Could not call - "${ name }"` ); }
 					}
 
+					//
+					if( this.debug ) { console.info( `jQuery.myData - Action Reaction (data-on): Call function "${ handlerName }", event: ${ event.type }`, element.get( 0 ) ); }
+
 					// Callback
-					if( typeof context.callbacks.on === 'function' ) { context.callbacks.on( element, name, value, { type: event.type, args: args } ); }
-					else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'on', element, name, value, { type: event.type, args: args } ); }
+					if( typeof this.callbacks.on === 'function' ) { this.callbacks.on( element, name, value, { type: event.type, args: args } ); }
+					else if( typeof this.callbacks.main === 'function' ) { this.callbacks.main( 'on', element, name, value, { type: event.type, args: args } ); }
 
 					//
 					if( result === false )
@@ -243,35 +255,37 @@
 					}
 				} );
 			} );
+
+			//
+			if( this.debug ) { console.info( `jQuery.myData - Set Event Listeners`, this.element ); }
 		}
 
 		// Add new elements to [data-bind] list
 		_setBindEvents( )
 		{
-			const context = this;
-			const setBinding = function( element )
+			const setBinding = ( element ) =>
 			{
 				const $element = $( element ),
-					propName = $element.attr( context.keys[ 'data' ] ) || '';
+					propName = $element.attr( this.keys[ 'data' ] ) || '';
 
 				if( propName === '' ) { return; }
 
 				// Add element to list
-				context.bindings.push( { element: element, property: propName, value: undefined } );
+				this.bindings.push( { element: element, property: propName, value: undefined } );
 			}
 
 			// Create the list of checked parameters
-			this.element.find( '[' + this.keys[ 'data' ] + ']' ).each( function( index, item )
+			this.element.find( '[' + this.keys[ 'data' ] + ']' ).each( ( index, item ) =>
 			{
 				setBinding( item );
 			} );
 
 			// Wait new elements
-			this.bindEventsObserver = new MutationObserver( function( mutations )
+			this.bindEventsObserver = new MutationObserver( ( mutations ) =>
 			{
-				mutations.forEach( function( mutation ) 
+				mutations.forEach( ( mutation ) =>
 				{
-					mutation.addedNodes.forEach( function( item ) 
+					mutation.addedNodes.forEach( ( item ) =>
 					{
 						setBinding( item );
 					} );
@@ -285,40 +299,41 @@
 		// [data-bind-element] Triggered events for new elements
 		_triggerBindElementEvents( )
 		{
-			const context = this;
-			const trigger = function( element )
+			const trigger = ( element, firstInit ) =>
 			{
 				const $element = $( element );
-				const actionData = $element.attr( context.keys[ 'data-element' ] ) || '';
+				const actionData = $element.attr( this.keys[ 'data-element' ] ) || '';
 
 				if( actionData === '' ) { return; }
 
-				context._extractActions( $element, actionData, function( action, selector )
+				this._extractActions( $element, actionData, ( action, selector ) =>
 				{
 					const targetElement = $( selector );
 
 					// Read value
-					let value = context._readElementValue( $element, targetElement.val( ) );
+					let value = undefined;
+					if( firstInit ) { value = $( element ).attr( this.keys[ 'default-value' ] ); };
+					if( !value ) { value = this._readElementValue( $element, targetElement.val( ) ); }
 
 					// Set value
-					context._setElementValue( targetElement, action, value );
+					this._setElementValue( targetElement, action, value );
 				} );
 			}
 
 			// Trigger leave elements
-			this.element.find( '[' + this.keys[ 'data-element' ] + ']' ).each( function( index, item )
+			this.element.find( '[' + this.keys[ 'data-element' ] + ']' ).each( ( index, item ) =>
 			{
-				trigger( item );
+				trigger( item, true );
 			} );
 
 			// Wait new elements
-			this.bindElementsObserver = new MutationObserver( function( mutations )
+			this.bindElementsObserver = new MutationObserver( ( mutations ) =>
 			{
-				mutations.forEach( function( mutation ) 
+				mutations.forEach( ( mutation ) =>
 				{
-					mutation.addedNodes.forEach( function( item ) 
+					mutation.addedNodes.forEach( ( item ) =>
 					{
-						trigger( item );
+						trigger( item, true );
 					} );
 				} ); 
 			} );
@@ -328,19 +343,18 @@
 		}
 
 		// Timer 
+		// @todo: Replace to Object.defineProperty( get( ): { }, set( ): { } ) ?
 		_setCheckTimer( delay )
 		{
-			let context = this;
-
 			// Clear timer
 			clearInterval( this.checkTimer );
 
 			//
-			this.checkTimer = setInterval( function( )
+			this.checkTimer = setInterval( ( ) =>
 			{
-				for( let i in context.bindings )
+				for( let i in this.bindings )
 				{
-					let item = context.bindings[ i ];
+					let item = this.bindings[ i ];
 					let element = $( item.element );
 					let targetKey = item.property;
 					let oldValue = item.value;
@@ -350,22 +364,25 @@
 					let getFunctionName = 'get' + targetKey.charAt( 0 ).toUpperCase( ) + targetKey.substr( 1 );
 
 					// Read value
-					if( typeof context.dataTarget[ getFunctionName ] === 'function' ) { value = context.dataTarget[ getFunctionName ]( ); }
-					else if( typeof context.dataTarget[ targetKey ] === 'function' ) { value = context.dataTarget[ targetKey ]( ); }
-					else if( context.dataTarget.hasOwnProperty( targetKey ) ) { value = context.dataTarget[ targetKey ]; }
+					if( typeof this.dataTarget[ getFunctionName ] === 'function' ) { value = this.dataTarget[ getFunctionName ]( ); }
+					else if( typeof this.dataTarget[ targetKey ] === 'function' ) { value = this.dataTarget[ targetKey ]( ); }
+					else if( this.dataTarget.hasOwnProperty( targetKey ) ) { value = this.dataTarget[ targetKey ]; }
 
 					// Only if value changed
 					if( value === oldValue ) { continue; }
 					item.value = value;
 
 					// Set value to element
-					if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) ) { $( element ).attr( 'checked', value ); }
-					else if( element.is( 'select' ) || element.is( 'input' ) || element.is( 'textarea' ) ) { $( element ).val( value ); }
-					else { $( element ).html( value ); }
+					if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) ) { element.attr( 'checked', value ); }
+					else if( element.is( 'select' ) || element.is( 'input' ) || element.is( 'textarea' ) ) { element.val( value ); }
+					else { element.html( value ); }
+
+					//
+					if( this.debug ) { console.info( `jQuery.myData - Binding Data (object > element) (data-bind): Read "${ value }" from "(get)${ targetKey }"`, element.get( 0 ) ); }
 
 					// Callback
-					if( typeof context.callbacks.get === 'function' ) { context.callbacks.get( element, targetKey, value, { } ); }
-					else if( typeof context.callbacks.main === 'function' )	{ context.callbacks.main( 'get', element, targetKey, value, { } ); }
+					if( typeof this.callbacks.get === 'function' ) { this.callbacks.get( element, targetKey, value, { } ); }
+					else if( typeof this.callbacks.main === 'function' ) { this.callbacks.main( 'get', element, targetKey, value, { } ); }
 				}
 			}, delay );
 		}
@@ -375,9 +392,9 @@
 		{
 			let value = undefined;
 			let elementValue = $( element ).attr( 'value' );
-			let customValue = $( element ).attr( this.keys[ 'event-value' ] );
+			let customValue = $( element ).attr( this.keys[ 'value' ] );
 
-			// data-on-value
+			// data-value
 			if( customValue !== undefined && customValue !== '' ) { value = customValue; }
 			// input:checkbox
 			else if( element.is( 'input[type="checkbox"]' ) || element.is( 'input[type="radio"]' ) )
@@ -399,7 +416,7 @@
 			else if( element.is( 'form' ) )
 			{
 				value = { };
-				$( element[0] ).serializeArray( ).forEach( function( x ) { value[ x.name ] = x.value; } );
+				$( element[ 0 ] ).serializeArray( ).forEach( ( x ) => { value[ x.name ] = x.value; } );
 			}
 
 			// If unable to read the value
@@ -411,46 +428,57 @@
 		// Set value
 		_setElementValue( element, event, value )
 		{
+			const isBooleanVal = this._valIsBoolean( value );
+			const booleanVal = this._valToBoolean( value );
+			const isInit = element.data( 'myData-init' );
+
+			let state;
+
 			if( event === 'visible' || event === 'hidden' )
 			{
-				let state = ( event === 'visible' ? 'hidden' : 'visible' );
+				const isDisplay = ( element.css( 'display' ) === '' 
+									|| element.css( 'display' ) === 'block' 
+									|| element.css( 'display' ) === 'none' );
 
-				if( ( typeof value === 'boolean' && value )
-					|| ( typeof value === 'string' && ( value === 'yes' || value === 'y' || value === 'true' ) )
-					|| ( typeof value === 'integer' && value >= 1 ) ) { state = event; }
+				// set
+				if( isBooleanVal ) { state = ( event === 'visible' && booleanVal ) ? 'visible' : 'hidden'; }
+				// toggle
+				else { state = ( event === 'visible' && element.is( ':visible' ) ) ? 'hidden' : 'visible'; }
 
-				// Display invisible
-				if( element.css( 'display' ) === '' 
-					|| element.css( 'display' ) === 'block' 
-					|| element.css( 'display' ) === 'none' )
-				{
-					element.css( 'display', ( state === 'hidden' ? 'none' : 'block' ) );
-				}
-				else
-				{
-					element.css( 'visibility', state );
-				}
+				//
+				if( isDisplay ) { element.css( 'display', ( state === 'hidden' ? 'none' : 'block' ) ); }
+				else { element.css( 'visibility', state ); }
 			}
 			else if( event === 'enabled' || event === 'disabled' )
 			{
-				if( ( typeof value === 'boolean' && value === true )
-					|| ( typeof value === 'string' && ( value === 'yes' || value === 'y' ) )
-					|| ( typeof value === 'integer' && value >= 1 ) )
-				{
-					if( event === 'enabled' ) { element.removeAttr( 'disabled' ); }
-					else { element.attr( 'disabled', 'disabled' ); }
-				}
-				else
-				{
-					if( event === 'disabled' ) { element.removeAttr( 'disabled' ); }
-					else { element.attr( 'disabled', 'disabled' ); }
-				}
+				// set
+				if( isBooleanVal ) { state = ( !booleanVal && event === 'enabled' ) || ( booleanVal && event === 'disabled' ); }
+				// toggle
+				else { state = element.is( ':disabled' ); }
+
+				//
+				if( !state ) { element.removeAttr( 'disabled' ); }
+				else { element.attr( 'disabled', 'disabled' ); }
+			}
+			else if( event === 'slide' )
+			{
+				// set
+				if( isBooleanVal ) { state = booleanVal; }
+				// toggle
+				else { state = !element.is( ':visible' ); }
+
+				//
+				if( state ) { element.slideDown( 200 ); }
+				else { element.slideUp( 200 ); }
 			}
 			else
 			{
 				if( element.is( 'input' ) || element.is( 'textarea' ) ) { element.val( value ); }
 				else { element.text( value ); }
 			}
+
+			//
+			element.data( 'myData-init', true );
 		}
 
 		// Extract actions from data
@@ -469,16 +497,21 @@
 			//
 			if( typeof actionData !== 'string' )
 			{
-				console.error( 'jQuery.myData: Empty data in [' + context.keys[ 'event' ] + '].' );
+				// console.error( 'jQuery.myData: Empty data in [' + this.keys[ 'event' ] + '].' );
 				return ;
 			}
 			else
 			{
-				actionList = ( actionData.indexOf( '[' ) === 0 ) ? ( actionData.match( /[\[\{}](.*?)[\}\]]/ )[ 1 ] || '' ).split( ',' ) : [ actionData ];
+				if( actionData.indexOf( '[' ) === 0 )
+				{
+					try { actionList = JSON.parse( actionData ); }	
+					catch { actionList = ( actionData.match( /[\[\{}](.*?)[\}\]]/ )[ 1 ] || '' ).split( ',' ); }
+				}
+				else { actionList = actionData.split( ',' ); }
 			}
 
 			//
-			actionList.forEach( function( listItem, i, arr ) 
+			actionList.forEach( ( listItem, i, arr ) =>
 			{
 				const onData = listItem.indexOf( ':' ) >= 0 ? listItem.split( ':' ) : [ defaultEvent, listItem ];
 				const actions = onData[ 0 ].trim( ).split( ',' );
@@ -488,11 +521,25 @@
 				if( !value ) { return ; }
 
 				//
-				actions.forEach( function( action, i, arr )
+				actions.forEach( ( action, i, arr ) =>
 				{
 					callback( action, value );
 				} );
 			} );
+		}
+
+		_valIsBoolean( value ) 
+		{
+			return ( ( typeof value === 'boolean' && value )
+					|| ( typeof value === 'string' && [ 'yes', 'true', 'y', 'no', 'false', 'n' ].indexOf( value ) !== -1 )
+					|| ( typeof value === 'integer' && [ 0, 1 ].indexOf( value ) !== -1 ) );
+		}
+
+		_valToBoolean( value )
+		{
+			return ( ( typeof value === 'boolean' && value )
+					|| ( typeof value === 'string' && [ 'yes', 'true', 'y' ].indexOf( value ) !== -1 )
+					|| ( typeof value === 'integer' && value === 1 ) );
 		}
 
 		// Destroy
@@ -505,41 +552,51 @@
 	// Plugin init
 	$.fn[ pluginName ] = function( params, callback )
 	{
-		const args = arguments;
+		const instance = isJQ 
+						? $( this ).data( '_' + pluginName )
+						: $( this )[ 0 ][ '_' + pluginName ];
 
 		// Object
 		if( params === undefined || typeof params === 'object' )
 		{
-			this.each( function( )
+			let id = Math.random( ).toString( 36 ).substring( 7 );
+			let debug = false;
+
+			if( typeof params === 'object' )
 			{
-				const instance = isJQ ? $( this ).data( '_' + pluginName ) : $( this )[ 0 ][ '_' + pluginName ];
-				const id = ( typeof params === 'object' && params.hasOwnProperty( 'exlusive' ) ) ? '' : Math.random( ).toString( 36 ).substring( 7 );
-
-				if( !instance || id !== '' )
+				if( params.exclusive )
 				{
-					let plugin = new Plugin( this, params, callback );
-
-					if( isJQ ) { $( this ).data( '_' + pluginName, plugin ); }
-					else { $( this )[ 0 ][ '_' + pluginName ] = plugin;	}
+					id = '';
+					delete params.exclusive;
 				}
-			} );
+
+				if( params.debug )
+				{
+					debug = true;
+					delete params.debug;
+				}
+			}
+
+			if( !instance || id !== '' )
+			{
+				let plugin = new Plugin( this, params, callback, debug );
+
+				if( isJQ ) { $( this ).data( '_' + pluginName, plugin ); }
+				else { $( this )[ 0 ][ '_' + pluginName ] = plugin;	}
+			}
 
 			return $( this );
 		}
 		// String
 		else if( typeof params === 'string' && params[0] !== '_' && params !== 'init' )
 		{
+			const args = arguments;
 			let returns = undefined;
 
-			this.each( function( )
+			if( instance instanceof Plugin && typeof instance[ params ] === 'function' )
 			{
-				const instance = isJQ ? $( this ).data( '_' + pluginName ) : $( this )[ 0 ][ '_' + pluginName ];
-
-				if( instance instanceof Plugin && typeof instance[ params ] === 'function' )
-				{
-					returns = instance[ params ].apply( instance, Array.prototype.slice.call( args, 1 ) );
-				}
-			} );
+				returns = instance[ params ].apply( instance, Array.prototype.slice.call( args, 1 ) );
+			}
 
 			return returns !== undefined ? returns : $( this );
 		}

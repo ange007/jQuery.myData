@@ -3,18 +3,18 @@
 
 DIST_PATH=${TRAVIS_BUILD_DIR}/actual-gh-pages
 
-# переходим в директорию
+# go to the directory
 cd ${TRAVIS_BUILD_DIR};
-# копируем в неё репозиторий
+# copy the repository into it
 git clone ${REPO_URL} actual-gh-pages;
-# переходим в скопированный директорию репозитория, переключаемся в нужную ветку и чистим файлы
+# go to the copied repository directory, switch to the desired branch and clean the files
 cd ${DIST_PATH} && git checkout gh-pages && rm -rf *;
-# перемещаем файлы
+# moving files
 cp -rp ${TRAVIS_BUILD_DIR}/docs/* ${DIST_PATH};
 cp -rp ${TRAVIS_BUILD_DIR}/build/ ${DIST_PATH};
-# заменяем пути к скриптам/css в исходниках
+# replace paths to scripts / css in sources
 sed -i -e "s/\.\.\//\.\//g" ${DIST_PATH}/index.html
-# переходим в директорию добавляе коммит
+# go to the directory add a commit
 cd ${DIST_PATH} && git add -A && git commit -am "Auto Build (${TRAVIS_BUILD_NUMBER})";
-# отправляем коммит
+# send commit
 git push ${REPO_URL} gh-pages;

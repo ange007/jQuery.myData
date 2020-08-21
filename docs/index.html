@@ -145,7 +145,7 @@
 				<div class="panel">
 						<label>
 							<b>Show "Activate panel":</b>
-							<input type="checkbox" name="data-bind-element-input-activate" value="y" data-bind-element="[visible:#activate-panel]"/>
+							<input type="checkbox" name="data-bind-element-input-activate" value="y" data-bind-element="[slide:#activate-panel]" data-default-value="false" />
 						</label>
 					</div>
 
@@ -231,11 +231,18 @@
 
 			// Uses data
 			var data = {
+				'debug': false, // System param
+
 				'time': getTime( ),
 				'text': '',
 				'check': false,
 				'test': function( value, elementData ) { alert( 'Test alert: ' + value ); },
-				'submit': function( value, elementData ) { alert( JSON.stringify( value ) ); }
+				'submit': function( value, elementData ) 
+				{ 
+					alert( JSON.stringify( value ) ); 
+
+					return true; 
+				},
 			};
 
 			// Activate two-way binding
