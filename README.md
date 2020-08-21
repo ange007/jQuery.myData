@@ -41,10 +41,11 @@ $( 'body' ).myData( data, {
 ## Options
 - **event** ```(object)``` - object for **[data-on]** actions.
 - **data** ```(object)``` - object for **[data-bind]** actions.
-- **exlusive** ```(boolean, default: false)``` - recreate plugin and event listeners if the plugin has already been used on this element.
+- **exclusive** ```(boolean, default: false)``` - recreate plugin and event listeners if the plugin has already been used on this element.
 - **data-keys** ```(object)``` - keys for working with data and events:
 	- **event** ```(string, default: 'data-on')```
-	- **event-value** ```(string, default: 'data-on-value')```
+	- **value** ```(string, default: 'data-value')```
+	- **default-value** ```(string, default: 'data-default-value')```
 	- **data** ```(string, default: 'data-bind')```
 	- **data-element** ```(string, default: 'data-bind-element')```
 

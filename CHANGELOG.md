@@ -1,4 +1,8 @@
 # CHANGELOG
+## v0.5.0
+* Add ```debug``` options.
+* Add custom events for ```data-bind-element```: `slide`.
+* Fix multiple elements set.
 ## v0.4.5: 
 * Triggered ```data-bind-element``` events on start (need for actualizing event state).
 * Added ```MutationObserver``` for wait dynamic created elements and triggered ```data-bind-element``` events.
@@ -24,7 +28,7 @@
 ## v0.2.0:
 * Added ```data-keys``` options for uses custom data keys.
 ## v0.1.2:
-* Added ```exlusive``` options.
+* Added ```exclusive``` options.
 * Added ```event``` and ```data``` options for separate event and data.
 ## v0.1.0:
 * First build.

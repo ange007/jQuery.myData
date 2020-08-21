@@ -1,6 +1,6 @@
 /**
  * jquery.mydata - Small JQuery&Zepto plugin for two-ways data binding.
- * @version v0.4.5
+ * @version v0.5.0
  * @link https://github.com/ange007/JQuery.myData
  * @license MIT
  * @author Borysenko Vladymyr
@@ -14,7 +14,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 ;
 
@@ -35,13 +35,12 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   var pluginName = 'myData';
   var isJQ = !!window.jQuery; // Plugin
 
-  var Plugin =
-  /*#__PURE__*/
-  function () {
-    function Plugin(element, targetOrOptions, callback) {
+  var Plugin = /*#__PURE__*/function () {
+    function Plugin(element, targetOrOptions, callback, debug) {
       _classCallCheck(this, Plugin);
 
       //
+      this.debug = debug;
       this.bindings = [];
       this.checkTimer = undefined;
       this.bindEventsObserver = undefined;
@@ -51,9 +50,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       this.callbacks = {};
       this.keys = {
         'event': 'data-on',
-        'event-value': 'data-on-value',
         'data': 'data-bind',
-        'data-element': 'data-bind-element'
+        'data-element': 'data-bind-element',
+        'value': 'data-value',
+        'default-value': 'data-default-value'
       }; // Event and Data target
 
       if (_typeof(targetOrOptions) === 'object' && targetOrOptions.hasOwnProperty('event') && targetOrOptions.hasOwnProperty('data')) {
@@ -63,7 +63,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         if (_typeof(targetOrOptions['data-keys']) === 'object') {
           this.keys = {
             'event': targetOrOptions['data-keys']['event'] || this.keys['event'],
-            'event-value': targetOrOptions['data-keys']['event-value'] || this.keys['event-value'],
+            'value': targetOrOptions['data-keys']['value'] || this.keys['value'],
+            'default-value': targetOrOptions['data-keys']['default-value'] || this.keys['default-value'],
             'data': targetOrOptions['data-keys']['data'] || this.keys['data'],
             'data-element': targetOrOptions['data-keys']['data-element'] || this.keys['data-element']
           };
@@ -91,8 +92,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     _createClass(Plugin, [{
       key: "bind",
       value: function bind() {
-        var context = this;
-
         this._setBindEvents();
 
         this._setEventListeners();
@@ -119,42 +118,45 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "_setEventListeners",
       value: function _setEventListeners() {
-        var context = this;
+        var _this = this;
+
         var bindEvents = ['change', 'keyup', 'input', 'paste'].map(function (item) {
           return item += '.' + pluginName;
         });
-        var onEvents = ['click', 'dblclick', 'change', 'input', 'paste', 'load', 'unload', 'select', 'resize', 'scroll', 'submit', 'error', 'keydown', 'keyup', 'keypress', 'mouseover', 'mousedown', 'mouseup', 'mousemove', 'mouseout', 'mouseenter', 'mouseleave', 'blur', 'focus', 'focusin', 'focusout'].map(function (item) {
+        var onEvents = ['click', 'dblclick', 'change', 'input', 'paste', 'load', 'unload', 'select', 'resize', 'scroll', 'submit', 'error', 'keydown', 'keyup', 'keypress', 'mouseover', 'mousedown', 'mouseup',
+        /*'mousemove',*/
+        'mouseout', 'mouseenter', 'mouseleave', 'blur', 'focus', 'focusin', 'focusout'].map(function (item) {
           return item += '.' + pluginName;
         }); // Change state reaction
         // data-bind="key" 
 
         this.element.on(bindEvents.join(' '), '[' + this.keys['data'] + ']', function (event) {
-          var element = $(event.target);
-          var targetKey = element.attr(context.keys['data']); //
+          var element = $(event.currentTarget);
+          var targetKey = element.attr(_this.keys['data']); //
 
           var value = undefined; // Change values
 
-          for (var i in context.bindings) {
-            var item = context.bindings[i];
+          for (var i in _this.bindings) {
+            var item = _this.bindings[i];
 
-            if (item.element !== event.target || item.property !== targetKey) {
+            if (item.element !== event.currentTarget || item.property !== targetKey) {
               continue;
             } // Read value
 
 
-            value = context._readElementValue(element, item.value); // Generate function name
+            value = _this._readElementValue(element, item.value); // Generate function name
 
             var setFunctionName = 'set' + targetKey.charAt(0).toUpperCase() + targetKey.substr(1); // Only if value changed
 
             if (value !== item.value) {
               item.value = value; // Send value
 
-              if (typeof context.dataTarget[setFunctionName] === 'function') {
-                context.dataTarget[setFunctionName].apply(context.dataTarget, [value]);
-              } else if (typeof context.dataTarget[targetKey] === 'function') {
-                context.dataTarget[targetKey].apply(context.dataTarget, [value]);
-              } else if (context.dataTarget.hasOwnProperty(targetKey)) {
-                context.dataTarget[targetKey] = value;
+              if (typeof _this.dataTarget[setFunctionName] === 'function') {
+                _this.dataTarget[setFunctionName].apply(_this.dataTarget, [value]);
+              } else if (typeof _this.dataTarget[targetKey] === 'function') {
+                _this.dataTarget[targetKey].apply(_this.dataTarget, [value]);
+              } else if (_this.dataTarget.hasOwnProperty(targetKey)) {
+                _this.dataTarget[targetKey] = value;
               }
 
               break;
@@ -162,12 +164,17 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           } //
 
 
-          if (typeof context.callbacks.set === 'function') {
-            context.callbacks.set(element, targetKey, value, {
+          if (_this.debug) {
+            console.info("jQuery.myData - Binding Data (element > object) (data-bind): Set \"".concat(value, "\" to \"(set)").concat(targetKey, "\", event: ").concat(event.type), element.get(0));
+          } //
+
+
+          if (typeof _this.callbacks.set === 'function') {
+            _this.callbacks.set(element, targetKey, value, {
               type: event.type
             });
-          } else if (typeof context.callbacks.main === 'function') {
-            context.callbacks.main('set', element, targetKey, value, {
+          } else if (typeof _this.callbacks.main === 'function') {
+            _this.callbacks.main('set', element, targetKey, value, {
               type: event.type
             });
           }
@@ -176,17 +183,22 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         // data-bind-element="[enabled:#id,text:input[name=qqq]]"
         // data-bind-element="visible:.class"
 
-        this.element.on(bindEvents.join(' '), '[' + this.keys['data-element'] + ']', function (event) {
-          var element = $(event.target);
-          var actionData = element.attr(context.keys['data-element']);
+        this.element.on(bindEvents.join(' ') + ' click', '[' + this.keys['data-element'] + ']', function (event) {
+          var element = $(event.currentTarget);
+          var actionData = element.attr(_this.keys['data-element']);
 
-          context._extractActions(element, actionData, function (action, selector) {
-            var targetElement = $(selector); // Read value
+          _this._extractActions(element, actionData, function (action, selector) {
+            var targetElement = element.find(selector).length ? element.find(selector) : $(selector); // Read value
 
-            var value = context._readElementValue(element, targetElement.val()); // Set value
+            var value = _this._readElementValue(element, targetElement.val()); //
 
 
-            context._setElementValue(targetElement, action, value);
+            if (_this.debug) {
+              console.info("jQuery.myData - Element connection (data-bind-element): Set element \"".concat(selector, "\" value: \"").concat(value, "\", event: ").concat(event.type), element.get(0));
+            } // Set value
+
+
+            _this._setElementValue(targetElement, action, value);
           });
         }); // Action reaction
         // data-on="focusin,focusout:action"
@@ -194,10 +206,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         // data-on="click:test( '!!!' )"
 
         this.element.on(onEvents.join(' '), '[' + this.keys['event'] + ']', function (event) {
-          var element = $(this);
-          var actionData = element.attr(context.keys['event']);
+          var element = $(event.currentTarget);
+          var actionData = element.attr(_this.keys['event']);
 
-          context._extractActions(element, actionData, function (eventType, handlerName) {
+          _this._extractActions(element, actionData, function (eventType, handlerName) {
             var handlerFunc = handlerName.match(/([a-zA-Z0-9,\.\-_\/]+)(?:\(([^)]+)\))?$/) || false; //
 
             if (eventType != event.type || !handlerFunc) {
@@ -209,41 +221,54 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             var args = typeof handlerFunc[2] === 'string' ? handlerFunc[2].split(',').map(function (item) {
               return item.trim().match(/^['"]{0,}(.*?)['"]{0,}$/)[1] || '';
             }) : [];
-            var targetFuncExist = context.eventTarget !== undefined && typeof context.eventTarget[name] === 'function';
+            var targetFuncExist = _this.eventTarget !== undefined && typeof _this.eventTarget[name] === 'function';
             var windowFuncExist = typeof window[name] === 'function'; // Read value
 
-            var value = context._readElementValue(element, undefined); //
+            var value = _this._readElementValue(element, undefined); //
 
 
             var callArgs = $.extend([], args);
 
             if (callArgs.length > 0) {
-              callArgs.push([element, event, value]);
+              callArgs.push({
+                element: element,
+                event: event,
+                value: value
+              });
             } else {
-              callArgs = [value, [element, event, value]];
+              callArgs = [value, {
+                element: element,
+                event: event,
+                value: value
+              }];
             } //
 
 
             var result = undefined; // Call function
 
             if (targetFuncExist) {
-              result = context.eventTarget[name].apply(context.eventTarget, callArgs);
+              result = _this.eventTarget[name].apply(_this.eventTarget, callArgs);
             } else {
               try {
                 result = eval(name).apply(window, callArgs);
               } catch (err) {
-                console.warn('jQuery.myData: Could not call - "' + name + '"');
+                console.warn("jQuery.myData: Could not call - \"".concat(name, "\""));
               }
+            } //
+
+
+            if (_this.debug) {
+              console.info("jQuery.myData - Action Reaction (data-on): Call function \"".concat(handlerName, "\", event: ").concat(event.type), element.get(0));
             } // Callback
 
 
-            if (typeof context.callbacks.on === 'function') {
-              context.callbacks.on(element, name, value, {
+            if (typeof _this.callbacks.on === 'function') {
+              _this.callbacks.on(element, name, value, {
                 type: event.type,
                 args: args
               });
-            } else if (typeof context.callbacks.main === 'function') {
-              context.callbacks.main('on', element, name, value, {
+            } else if (typeof _this.callbacks.main === 'function') {
+              _this.callbacks.main('on', element, name, value, {
                 type: event.type,
                 args: args
               });
@@ -259,24 +284,28 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 return result;
               }
           });
-        });
+        }); //
+
+        if (this.debug) {
+          console.info("jQuery.myData - Set Event Listeners", this.element);
+        }
       } // Add new elements to [data-bind] list
 
     }, {
       key: "_setBindEvents",
       value: function _setBindEvents() {
-        var context = this;
+        var _this2 = this;
 
         var setBinding = function setBinding(element) {
           var $element = $(element),
-              propName = $element.attr(context.keys['data']) || '';
+              propName = $element.attr(_this2.keys['data']) || '';
 
           if (propName === '') {
             return;
           } // Add element to list
 
 
-          context.bindings.push({
+          _this2.bindings.push({
             element: element,
             property: propName,
             value: undefined
@@ -304,35 +333,45 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "_triggerBindElementEvents",
       value: function _triggerBindElementEvents() {
-        var context = this;
+        var _this3 = this;
 
-        var trigger = function trigger(element) {
+        var trigger = function trigger(element, firstInit) {
           var $element = $(element);
-          var actionData = $element.attr(context.keys['data-element']) || '';
+          var actionData = $element.attr(_this3.keys['data-element']) || '';
 
           if (actionData === '') {
             return;
           }
 
-          context._extractActions($element, actionData, function (action, selector) {
+          _this3._extractActions($element, actionData, function (action, selector) {
             var targetElement = $(selector); // Read value
 
-            var value = context._readElementValue($element, targetElement.val()); // Set value
+            var value = undefined;
+
+            if (firstInit) {
+              value = $(element).attr(_this3.keys['default-value']);
+            }
+
+            ;
+
+            if (!value) {
+              value = _this3._readElementValue($element, targetElement.val());
+            } // Set value
 
 
-            context._setElementValue(targetElement, action, value);
+            _this3._setElementValue(targetElement, action, value);
           });
         }; // Trigger leave elements
 
 
         this.element.find('[' + this.keys['data-element'] + ']').each(function (index, item) {
-          trigger(item);
+          trigger(item, true);
         }); // Wait new elements
 
         this.bindElementsObserver = new MutationObserver(function (mutations) {
           mutations.forEach(function (mutation) {
             mutation.addedNodes.forEach(function (item) {
-              trigger(item);
+              trigger(item, true);
             });
           });
         }); //
@@ -341,17 +380,19 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           childList: true
         });
       } // Timer 
+      // @todo: Replace to Object.defineProperty( get( ): { }, set( ): { } ) ?
 
     }, {
       key: "_setCheckTimer",
       value: function _setCheckTimer(delay) {
-        var context = this; // Clear timer
+        var _this4 = this;
 
+        // Clear timer
         clearInterval(this.checkTimer); //
 
         this.checkTimer = setInterval(function () {
-          for (var i in context.bindings) {
-            var item = context.bindings[i];
+          for (var i in _this4.bindings) {
+            var item = _this4.bindings[i];
             var element = $(item.element);
             var targetKey = item.property;
             var oldValue = item.value;
@@ -359,12 +400,12 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
             var getFunctionName = 'get' + targetKey.charAt(0).toUpperCase() + targetKey.substr(1); // Read value
 
-            if (typeof context.dataTarget[getFunctionName] === 'function') {
-              value = context.dataTarget[getFunctionName]();
-            } else if (typeof context.dataTarget[targetKey] === 'function') {
-              value = context.dataTarget[targetKey]();
-            } else if (context.dataTarget.hasOwnProperty(targetKey)) {
-              value = context.dataTarget[targetKey];
+            if (typeof _this4.dataTarget[getFunctionName] === 'function') {
+              value = _this4.dataTarget[getFunctionName]();
+            } else if (typeof _this4.dataTarget[targetKey] === 'function') {
+              value = _this4.dataTarget[targetKey]();
+            } else if (_this4.dataTarget.hasOwnProperty(targetKey)) {
+              value = _this4.dataTarget[targetKey];
             } // Only if value changed
 
 
@@ -375,18 +416,23 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             item.value = value; // Set value to element
 
             if (element.is('input[type="checkbox"]') || element.is('input[type="radio"]')) {
-              $(element).attr('checked', value);
+              element.attr('checked', value);
             } else if (element.is('select') || element.is('input') || element.is('textarea')) {
-              $(element).val(value);
+              element.val(value);
             } else {
-              $(element).html(value);
+              element.html(value);
+            } //
+
+
+            if (_this4.debug) {
+              console.info("jQuery.myData - Binding Data (object > element) (data-bind): Read \"".concat(value, "\" from \"(get)").concat(targetKey, "\""), element.get(0));
             } // Callback
 
 
-            if (typeof context.callbacks.get === 'function') {
-              context.callbacks.get(element, targetKey, value, {});
-            } else if (typeof context.callbacks.main === 'function') {
-              context.callbacks.main('get', element, targetKey, value, {});
+            if (typeof _this4.callbacks.get === 'function') {
+              _this4.callbacks.get(element, targetKey, value, {});
+            } else if (typeof _this4.callbacks.main === 'function') {
+              _this4.callbacks.main('get', element, targetKey, value, {});
             }
           }
         }, delay);
@@ -397,7 +443,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       value: function _readElementValue(element, oldValue) {
         var value = undefined;
         var elementValue = $(element).attr('value');
-        var customValue = $(element).attr(this.keys['event-value']); // data-on-value
+        var customValue = $(element).attr(this.keys['value']); // data-value
 
         if (customValue !== undefined && customValue !== '') {
           value = customValue;
@@ -440,32 +486,58 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "_setElementValue",
       value: function _setElementValue(element, event, value) {
+        var isBooleanVal = this._valIsBoolean(value);
+
+        var booleanVal = this._valToBoolean(value);
+
+        var isInit = element.data('myData-init');
+        var state;
+
         if (event === 'visible' || event === 'hidden') {
-          var state = event === 'visible' ? 'hidden' : 'visible';
+          var isDisplay = element.css('display') === '' || element.css('display') === 'block' || element.css('display') === 'none'; // set
 
-          if (typeof value === 'boolean' && value || typeof value === 'string' && (value === 'yes' || value === 'y' || value === 'true') || typeof value === 'integer' && value >= 1) {
-            state = event;
-          } // Display invisible
+          if (isBooleanVal) {
+            state = event === 'visible' && booleanVal ? 'visible' : 'hidden';
+          } // toggle
+          else {
+              state = event === 'visible' && element.is(':visible') ? 'hidden' : 'visible';
+            } //
 
 
-          if (element.css('display') === '' || element.css('display') === 'block' || element.css('display') === 'none') {
+          if (isDisplay) {
             element.css('display', state === 'hidden' ? 'none' : 'block');
           } else {
             element.css('visibility', state);
           }
         } else if (event === 'enabled' || event === 'disabled') {
-          if (typeof value === 'boolean' && value === true || typeof value === 'string' && (value === 'yes' || value === 'y') || typeof value === 'integer' && value >= 1) {
-            if (event === 'enabled') {
-              element.removeAttr('disabled');
-            } else {
-              element.attr('disabled', 'disabled');
-            }
+          // set
+          if (isBooleanVal) {
+            state = !booleanVal && event === 'enabled' || booleanVal && event === 'disabled';
+          } // toggle
+          else {
+              state = element.is(':disabled');
+            } //
+
+
+          if (!state) {
+            element.removeAttr('disabled');
           } else {
-            if (event === 'disabled') {
-              element.removeAttr('disabled');
-            } else {
-              element.attr('disabled', 'disabled');
-            }
+            element.attr('disabled', 'disabled');
+          }
+        } else if (event === 'slide') {
+          // set
+          if (isBooleanVal) {
+            state = booleanVal;
+          } // toggle
+          else {
+              state = !element.is(':visible');
+            } //
+
+
+          if (state) {
+            element.slideDown(200);
+          } else {
+            element.slideUp(200);
           }
         } else {
           if (element.is('input') || element.is('textarea')) {
@@ -473,7 +545,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           } else {
             element.text(value);
           }
-        }
+        } //
+
+
+        element.data('myData-init', true);
       } // Extract actions from data
       // ="focusin,focusout:action" 
       // ="[click:action1,change:action2]"
@@ -494,10 +569,18 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         var actionList = []; //
 
         if (typeof actionData !== 'string') {
-          console.error('jQuery.myData: Empty data in [' + context.keys['event'] + '].');
+          // console.error( 'jQuery.myData: Empty data in [' + this.keys[ 'event' ] + '].' );
           return;
         } else {
-          actionList = actionData.indexOf('[') === 0 ? (actionData.match(/[\[\{}](.*?)[\}\]]/)[1] || '').split(',') : [actionData];
+          if (actionData.indexOf('[') === 0) {
+            try {
+              actionList = JSON.parse(actionData);
+            } catch (_unused) {
+              actionList = (actionData.match(/[\[\{}](.*?)[\}\]]/)[1] || '').split(',');
+            }
+          } else {
+            actionList = actionData.split(',');
+          }
         } //
 
 
@@ -515,6 +598,16 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             callback(action, value);
           });
         });
+      }
+    }, {
+      key: "_valIsBoolean",
+      value: function _valIsBoolean(value) {
+        return typeof value === 'boolean' && value || typeof value === 'string' && ['yes', 'true', 'y', 'no', 'false', 'n'].indexOf(value) !== -1 || typeof value === 'integer' && [0, 1].indexOf(value) !== -1;
+      }
+    }, {
+      key: "_valToBoolean",
+      value: function _valToBoolean(value) {
+        return typeof value === 'boolean' && value || typeof value === 'string' && ['yes', 'true', 'y'].indexOf(value) !== -1 || typeof value === 'integer' && value === 1;
       } // Destroy
 
     }, {
@@ -530,34 +623,44 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   ; // Plugin init
 
   $.fn[pluginName] = function (params, callback) {
-    var args = arguments; // Object
+    var instance = isJQ ? $(this).data('_' + pluginName) : $(this)[0]['_' + pluginName]; // Object
 
     if (params === undefined || _typeof(params) === 'object') {
-      this.each(function () {
-        var instance = isJQ ? $(this).data('_' + pluginName) : $(this)[0]['_' + pluginName];
-        var id = _typeof(params) === 'object' && params.hasOwnProperty('exlusive') ? '' : Math.random().toString(36).substring(7);
+      var id = Math.random().toString(36).substring(7);
+      var debug = false;
 
-        if (!instance || id !== '') {
-          var plugin = new Plugin(this, params, callback);
-
-          if (isJQ) {
-            $(this).data('_' + pluginName, plugin);
-          } else {
-            $(this)[0]['_' + pluginName] = plugin;
-          }
+      if (_typeof(params) === 'object') {
+        if (params.exclusive) {
+          id = '';
+          delete params.exclusive;
         }
-      });
+
+        if (params.debug) {
+          debug = true;
+          delete params.debug;
+        }
+      }
+
+      if (!instance || id !== '') {
+        var plugin = new Plugin(this, params, callback, debug);
+
+        if (isJQ) {
+          $(this).data('_' + pluginName, plugin);
+        } else {
+          $(this)[0]['_' + pluginName] = plugin;
+        }
+      }
+
       return $(this);
     } // String
     else if (typeof params === 'string' && params[0] !== '_' && params !== 'init') {
+        var args = arguments;
         var returns = undefined;
-        this.each(function () {
-          var instance = isJQ ? $(this).data('_' + pluginName) : $(this)[0]['_' + pluginName];
 
-          if (instance instanceof Plugin && typeof instance[params] === 'function') {
-            returns = instance[params].apply(instance, Array.prototype.slice.call(args, 1));
-          }
-        });
+        if (instance instanceof Plugin && typeof instance[params] === 'function') {
+          returns = instance[params].apply(instance, Array.prototype.slice.call(args, 1));
+        }
+
         return returns !== undefined ? returns : $(this);
       }
   };
